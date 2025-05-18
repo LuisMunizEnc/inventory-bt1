@@ -1,4 +1,50 @@
 package com.inventory.products.service.impl;
 
-public class CategoryServiceImpl {
+import com.inventory.products.exception.CategoryAlreadyExistsException;
+import com.inventory.products.exception.CategoryInvalidArguments;
+import com.inventory.products.exception.CategoryNotFoundException;
+import com.inventory.products.model.Category;
+import com.inventory.products.repository.CategoryRepository;
+import com.inventory.products.service.CategoryService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class CategoryServiceImpl implements CategoryService {
+
+    private final CategoryRepository categoryRepository;
+
+    @Autowired
+    public CategoryServiceImpl(CategoryRepository categoryRepository) {
+        this.categoryRepository = categoryRepository;
+    }
+
+    @Override
+    public Category createCategory(Category category){
+        if (category == null) {
+            throw new IllegalArgumentException("Category must exist");
+        }
+        if (category.getCategoryName() == null || category.getCategoryName().trim().isEmpty()) {
+            throw new CategoryInvalidArguments("Category name can't be null or empty");
+        }
+        if (categoryRepository.existsByName(category.getCategoryName())) {
+            throw new CategoryAlreadyExistsException("Category already exist: " + category.getCategoryName());
+        }
+        return categoryRepository.save(category);
+    }
+
+    @Override
+    public List<Category> getAllCategories(){
+        return categoryRepository.findAll();
+    }
+
+    public Category getCategoryByName(String categoryName){
+        Category foundCategory =  categoryRepository.findByName(categoryName);
+        if(foundCategory == null){
+            throw new CategoryNotFoundException("Category with name " + categoryName + "doesn't exist");
+        }
+        return foundCategory;
+    }
 }
