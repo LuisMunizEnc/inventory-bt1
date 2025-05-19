@@ -4,8 +4,11 @@ import com.inventory.products.model.Category;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
+import static org.springframework.util.StringUtils.hasText;
 
 @Repository
 public class CategoryRepository {
@@ -18,21 +21,20 @@ public class CategoryRepository {
     }
 
     public List<Category> findAll(){
-        return new ArrayList<>(categories.values());
+        return categories.values().stream()
+                .sorted(Comparator.comparing(Category::getCategoryName))
+                .collect(Collectors.toList());
     }
 
     public Category findByName(String categoryName) {
-        if (categoryName == null || categoryName.trim().isEmpty()) {
+        if (!hasText(categoryName)) {
             return null;
         }
-        return categories.get(categoryName.trim());
+        return categories.get(categoryName);
     }
 
     public boolean existsByName(String categoryName) {
-        if (categoryName == null || categoryName.trim().isEmpty()) {
-            return false;
-        }
-        return categories.containsKey(categoryName.trim());
+        return hasText(categoryName) && categories.containsKey(categoryName.trim());
     }
 
 }

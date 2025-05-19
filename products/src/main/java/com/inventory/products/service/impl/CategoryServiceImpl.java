@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static org.springframework.util.StringUtils.hasText;
+
 @Service
 public class CategoryServiceImpl implements CategoryService {
 
@@ -26,9 +28,10 @@ public class CategoryServiceImpl implements CategoryService {
         if (category == null) {
             throw new IllegalArgumentException("Category must exist");
         }
-        if (category.getCategoryName() == null || category.getCategoryName().trim().isEmpty()) {
+        if (!hasText(category.getCategoryName())) {
             throw new EntityInvalidArguments("Category name can't be null or empty");
         }
+        category.setCategoryName(category.getCategoryName().trim());
         if (categoryRepository.existsByName(category.getCategoryName())) {
             throw new EntityAlreadyExistsException("Category already exist: " + category.getCategoryName());
         }
