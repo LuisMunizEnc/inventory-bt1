@@ -1,8 +1,8 @@
 package com.inventory.products.service.impl;
 
-import com.inventory.products.exception.CategoryAlreadyExistsException;
-import com.inventory.products.exception.CategoryInvalidArguments;
-import com.inventory.products.exception.CategoryNotFoundException;
+import com.inventory.products.exception.EntityAlreadyExistsException;
+import com.inventory.products.exception.EntityInvalidArguments;
+import com.inventory.products.exception.EntityNotFoundException;
 import com.inventory.products.model.Category;
 import com.inventory.products.repository.CategoryRepository;
 import com.inventory.products.service.CategoryService;
@@ -27,10 +27,10 @@ public class CategoryServiceImpl implements CategoryService {
             throw new IllegalArgumentException("Category must exist");
         }
         if (category.getCategoryName() == null || category.getCategoryName().trim().isEmpty()) {
-            throw new CategoryInvalidArguments("Category name can't be null or empty");
+            throw new EntityInvalidArguments("Category name can't be null or empty");
         }
         if (categoryRepository.existsByName(category.getCategoryName())) {
-            throw new CategoryAlreadyExistsException("Category already exist: " + category.getCategoryName());
+            throw new EntityAlreadyExistsException("Category already exist: " + category.getCategoryName());
         }
         return categoryRepository.save(category);
     }
@@ -44,7 +44,7 @@ public class CategoryServiceImpl implements CategoryService {
     public Category getCategoryByName(String categoryName){
         Category foundCategory =  categoryRepository.findByName(categoryName);
         if(foundCategory == null){
-            throw new CategoryNotFoundException("Category with name " + categoryName + " doesn't exist");
+            throw new EntityNotFoundException("Category with name " + categoryName + " doesn't exist");
         }
         return foundCategory;
     }

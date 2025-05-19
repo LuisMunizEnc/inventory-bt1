@@ -1,8 +1,9 @@
 package com.inventory.products.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.inventory.products.exception.CategoryAlreadyExistsException;
-import com.inventory.products.exception.CategoryNotFoundException;
+import com.inventory.products.dto.ErrorResponse;
+import com.inventory.products.exception.EntityAlreadyExistsException;
+import com.inventory.products.exception.EntityNotFoundException;
 import com.inventory.products.model.Category;
 import com.inventory.products.service.impl.CategoryServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -137,41 +138,64 @@ public class CategoryControllerTest {
     public void givenNonExistingCategoryName_whenGetCategoryByName_thenReturnNotFound() throws Exception {
         // given
         String categoryName = "NonExistent";
-        when(categoryService.getCategoryByName(categoryName)).thenThrow(new CategoryNotFoundException("Category not found"));
+        String errorMessage = "Category with name " + categoryName + " doesn't exist";
+        when(categoryService.getCategoryByName(categoryName)).thenThrow(new EntityNotFoundException(errorMessage));
 
         // when
-        mockMvc.perform(MockMvcRequestBuilders.get("/categories/" + categoryName))
-                .andExpect(status().isNotFound());
+        MockHttpServletResponse response = mockMvc.perform(MockMvcRequestBuilders.get("/categories/" + categoryName))
+                .andExpect(status().isNotFound())
+                .andReturn().getResponse();
 
         // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        ErrorResponse errorResponse = objectMapper.readValue(response.getContentAsString(), ErrorResponse.class);
+        assertNotNull(errorResponse);
+        assertEquals(errorMessage, errorResponse.getMessage());
         verify(categoryService).getCategoryByName(categoryName);
     }
+
 
     @Test
     public void givenCategoryAlreadyExistsException_whenCreateCategory_thenHandleException() throws Exception {
         // given
         Category categoryToCreate = Category.builder().categoryName("ExistingCategory").build();
-        when(categoryService.createCategory(categoryToCreate)).thenThrow(new CategoryAlreadyExistsException("Category already exists"));
+        String errorMessage = "Category already exists";
+        when(categoryService.createCategory(categoryToCreate)).thenThrow(new EntityAlreadyExistsException(errorMessage));
 
         // when
-        // then
-        mockMvc.perform(MockMvcRequestBuilders.post("/categories")
+        MockHttpServletResponse response = mockMvc.perform(MockMvcRequestBuilders.post("/categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(categoryToCreate)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        ErrorResponse errorResponse = objectMapper.readValue(response.getContentAsString(), ErrorResponse.class);
+        assertNotNull(errorResponse);
+        assertEquals(errorMessage, errorResponse.getMessage());
+        verify(categoryService).createCategory(categoryToCreate);
     }
 
     @Test
     public void givenIllegalArgumentException_whenCreateCategory_thenHandleException() throws Exception {
         // given
         Category invalidCategory = Category.builder().categoryName("").build();
-        when(categoryService.createCategory(invalidCategory)).thenThrow(new IllegalArgumentException("Invalid argument"));
+        String errorMessage = "Category name can't be null or empty";
+        when(categoryService.createCategory(invalidCategory)).thenThrow(new IllegalArgumentException(errorMessage));
 
         // when
-        // then
-        mockMvc.perform(MockMvcRequestBuilders.post("/categories")
+        MockHttpServletResponse response = mockMvc.perform(MockMvcRequestBuilders.post("/categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidCategory)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        ErrorResponse errorResponse = objectMapper.readValue(response.getContentAsString(), ErrorResponse.class);
+        assertNotNull(errorResponse);
+        assertEquals(errorMessage, errorResponse.getMessage());
+        verify(categoryService).createCategory(invalidCategory);
     }
 }

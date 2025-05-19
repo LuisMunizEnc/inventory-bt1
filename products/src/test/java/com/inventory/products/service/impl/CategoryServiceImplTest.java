@@ -1,8 +1,8 @@
 package com.inventory.products.service.impl;
 
-import com.inventory.products.exception.CategoryAlreadyExistsException;
-import com.inventory.products.exception.CategoryInvalidArguments;
-import com.inventory.products.exception.CategoryNotFoundException;
+import com.inventory.products.exception.EntityAlreadyExistsException;
+import com.inventory.products.exception.EntityInvalidArguments;
+import com.inventory.products.exception.EntityNotFoundException;
 import com.inventory.products.model.Category;
 import com.inventory.products.repository.CategoryRepository;
 import org.junit.jupiter.api.Test;
@@ -63,7 +63,7 @@ public class CategoryServiceImplTest {
         //when
         //then
         assertThatThrownBy(() -> categoryService.createCategory(category))
-                .isInstanceOf(CategoryInvalidArguments.class);
+                .isInstanceOf(EntityInvalidArguments.class);
     }
 
     @Test
@@ -76,7 +76,7 @@ public class CategoryServiceImplTest {
         //when
         //then
         assertThatThrownBy(() -> categoryService.createCategory(category))
-                .isInstanceOf(CategoryInvalidArguments.class);
+                .isInstanceOf(EntityInvalidArguments.class);
     }
 
     @Test
@@ -91,7 +91,7 @@ public class CategoryServiceImplTest {
         // when
         // then
         assertThatThrownBy(() -> categoryService.createCategory(category))
-                .isInstanceOf(CategoryAlreadyExistsException.class);
+                .isInstanceOf(EntityAlreadyExistsException.class);
     }
 
     @Test
@@ -152,6 +152,6 @@ public class CategoryServiceImplTest {
         // when
         // then
         assertThatThrownBy(() -> categoryService.getCategoryByName(categoryName))
-                .isInstanceOf(CategoryNotFoundException.class);
+                .isInstanceOf(EntityNotFoundException.class);
     }
 }
