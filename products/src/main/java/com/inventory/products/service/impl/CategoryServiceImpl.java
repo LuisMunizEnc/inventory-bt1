@@ -40,10 +40,11 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryRepository.findAll();
     }
 
+    @Override
     public Category getCategoryByName(String categoryName){
         Category foundCategory =  categoryRepository.findByName(categoryName);
         if(foundCategory == null){
-            throw new CategoryNotFoundException("Category with name " + categoryName + "doesn't exist");
+            throw new CategoryNotFoundException("Category with name " + categoryName + " doesn't exist");
         }
         return foundCategory;
     }
