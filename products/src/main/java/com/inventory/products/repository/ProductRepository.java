@@ -19,7 +19,7 @@ public class ProductRepository {
     public Product save(Product product) {
         String id = product.getId() == null ? UUID.randomUUID().toString() : product.getId();
         product.setId(id);
-        if (products.get(id) == null) {
+        if (products.containsKey(id)) {
             product.setCreatedAt(LocalDate.now());
         } else {
             product.setUpdatedAt(LocalDate.now());
@@ -28,8 +28,8 @@ public class ProductRepository {
         return product;
     }
 
-    public Product findById(String id) {
-        return products.get(id);
+    public Optional<Product> findById(String id) {
+        return Optional.ofNullable(products.get(id));
     }
 
     public List<Product> findAll() {
@@ -45,12 +45,22 @@ public class ProductRepository {
 
     public List<Product> findByCriteria(String nameFilter, List<String> categoryFilter, boolean availabilityFilter) {
         return products.values().stream()
-                .filter(product ->
-                        (!hasText(nameFilter) || product.getName().toLowerCase().contains(nameFilter.toLowerCase())) &&
-                                (categoryFilter == null || categoryFilter.isEmpty() || categoryFilter.contains(product.getCategory().getCategoryName())) &&
-                                (!availabilityFilter || product.getInStock() > 0)
-                )
+                .filter(product -> isNameMatching(product, nameFilter))
+                .filter(product -> isCategoryMatching(product, categoryFilter))
+                .filter(product -> isAvailabilityMatching(product, availabilityFilter))
                 .collect(Collectors.toList());
+    }
+
+    private boolean isNameMatching(Product product, String nameFilter) {
+        return !hasText(nameFilter) || product.getName().toLowerCase().contains(nameFilter.toLowerCase());
+    }
+
+    private boolean isCategoryMatching(Product product, List<String> categoryFilter) {
+        return categoryFilter == null || categoryFilter.isEmpty() || categoryFilter.contains(product.getCategory().getCategoryName());
+    }
+
+    private boolean isAvailabilityMatching(Product product, boolean availabilityFilter) {
+        return !availabilityFilter || product.getInStock() > 0;
     }
 
     // Toggle availability

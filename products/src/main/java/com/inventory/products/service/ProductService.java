@@ -1,5 +1,6 @@
 package com.inventory.products.service;
 
+import com.inventory.products.dto.CategoryMetrics;
 import com.inventory.products.dto.InventoryMetricsReport;
 import com.inventory.products.model.Product;
 import com.inventory.products.dto.ProductInfo;

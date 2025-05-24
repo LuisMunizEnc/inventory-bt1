@@ -258,7 +258,7 @@ public class ProductServiceImplTest {
 
         Category updatedCategory = Category.builder().categoryName("Electronics").build();
 
-        when(productRepository.findById(productId)).thenReturn(existingProduct);
+        when(productRepository.findById(productId)).thenReturn(Optional.ofNullable(existingProduct));
         when(categoryService.getCategoryByName("Electronics")).thenReturn(updatedCategory);
         when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
@@ -276,6 +276,7 @@ public class ProductServiceImplTest {
 
         verify(productRepository).findById(productId);
         verify(categoryService).getCategoryByName("Electronics");
+        assertNotNull(existingProduct);
         verify(productRepository).save(existingProduct);
     }
 
@@ -321,7 +322,7 @@ public class ProductServiceImplTest {
         productInfo.setUnitPrice(new BigDecimal("100.00"));
         productInfo.setInStock(5);
 
-        when(productRepository.findById(nonExistentId)).thenReturn(null);
+        when(productRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
         // when
         // then
@@ -351,7 +352,7 @@ public class ProductServiceImplTest {
                 .inStock(5)
                 .build();
 
-        when(productRepository.findById(productId)).thenReturn(existingProduct);
+        when(productRepository.findById(productId)).thenReturn(Optional.ofNullable(existingProduct));
         when(categoryService.getCategoryByName("NonExistentCategory")).thenReturn(null);
 
         // when / then
@@ -406,7 +407,7 @@ public class ProductServiceImplTest {
         // given
         String productId = UUID.randomUUID().toString();
         Product expectedProduct = Product.builder().id(productId).name("Test Product").build();
-        when(productRepository.findById(productId)).thenReturn(expectedProduct);
+        when(productRepository.findById(productId)).thenReturn(Optional.ofNullable(expectedProduct));
 
         // when
         Product foundProduct = productService.getProductById(productId);
@@ -447,7 +448,7 @@ public class ProductServiceImplTest {
     public void givenNonExistingId_whenGetProductById_thenThrowEntityNotFoundException() {
         // given
         String nonExistentId = UUID.randomUUID().toString();
-        when(productRepository.findById(nonExistentId)).thenReturn(null);
+        when(productRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
         // when
         // then
@@ -469,15 +470,17 @@ public class ProductServiceImplTest {
         Product product1 = Product.builder().id(id1).name("Product 1").inStock(10).build(); // In stock
         Product product2 = Product.builder().id(id2).name("Product 2").inStock(0).build();  // Out of stock
 
-        when(productRepository.findById(id1)).thenReturn(product1);
-        when(productRepository.findById(id2)).thenReturn(product2);
+        when(productRepository.findById(id1)).thenReturn(Optional.ofNullable(product1));
+        when(productRepository.findById(id2)).thenReturn(Optional.ofNullable(product2));
 
         // when
         productService.updateProductAvailability(productIds);
 
         // then
-        verify(productRepository).updateAvailability(product1, true); // true because (10 > 0) is true
-        verify(productRepository).updateAvailability(product2, false); // false because (0 > 0) is false
+        assertNotNull(product1);
+        verify(productRepository).updateAvailability(product1, true);
+        assertNotNull(product2);
+        verify(productRepository).updateAvailability(product2, false);
     }
 
     @Test
@@ -515,8 +518,8 @@ public class ProductServiceImplTest {
 
         Product product1 = Product.builder().id(id1).name("Product 1").inStock(10).build();
 
-        when(productRepository.findById(id1)).thenReturn(product1);
-        when(productRepository.findById(id2)).thenReturn(null);
+        when(productRepository.findById(id1)).thenReturn(Optional.ofNullable(product1));
+        when(productRepository.findById(id2)).thenReturn(Optional.empty());
 
         // when
         productService.updateProductAvailability(productIds);
@@ -524,6 +527,7 @@ public class ProductServiceImplTest {
         // then
         verify(productRepository).findById(id1);
         verify(productRepository).findById(id2);
+        assertNotNull(product1);
         verify(productRepository).updateAvailability(product1, true);
         verifyNoMoreInteractions(productRepository);
     }
@@ -579,7 +583,7 @@ public class ProductServiceImplTest {
         when(productRepository.getAveragePriceOfInStockProductsByCategory()).thenReturn(averagePriceOfInStockProductsByCategory);
         when(productRepository.getTotalProductsInStock()).thenReturn(35);
         when(productRepository.getTotalValueOfInventory()).thenReturn(new BigDecimal("1600.00"));
-        when(productRepository.getAveragePriceOfInStockProducts()).thenReturn(new BigDecimal("45.71")); // Example average
+        when(productRepository.getAveragePriceOfInStockProducts()).thenReturn(new BigDecimal("45.71"));
 
         // when
         InventoryMetricsReport report = productService.getInventoryReport();

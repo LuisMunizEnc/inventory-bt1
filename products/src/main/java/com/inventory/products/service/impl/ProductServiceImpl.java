@@ -14,10 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.time.LocalDate;
 
 import static org.springframework.util.StringUtils.hasText;
@@ -81,9 +78,9 @@ public class ProductServiceImpl implements ProductService {
         if (productInfo.getId() == null) {
             throw new IllegalArgumentException("Product ID is required for updating");
         }
-        Product existingProduct = productRepository.findById(productInfo.getId());
+        Optional<Product> productFound = productRepository.findById(productInfo.getId());
 
-        if (existingProduct == null) {
+        if (productFound.isEmpty()) {
             throw new EntityNotFoundException("Product not found with ID: " + productInfo.getId());
         }
 
@@ -91,6 +88,8 @@ public class ProductServiceImpl implements ProductService {
         if (category == null) {
             throw new EntityNotFoundException("Category does not exist: " + productInfo.getCategoryName());
         }
+
+        Product existingProduct = productFound.get();
 
         existingProduct.setName(productInfo.getName());
         existingProduct.setCategory(category);
@@ -105,11 +104,8 @@ public class ProductServiceImpl implements ProductService {
         if(!hasText(productId)) {
             throw new IllegalArgumentException("Product ID cannot be null or empty");
         }
-        Product productFound =  productRepository.findById(productId);
-        if(productFound == null){
-            throw new EntityNotFoundException("Product not found with ID: " + productId);
-        }
-        return productFound;
+        Optional<Product> productFound =  productRepository.findById(productId);
+        return productFound.orElseThrow(() -> new EntityNotFoundException("Product not found with ID: " + productId));
     }
 
     public List<Product> getAllProducts() {
@@ -126,10 +122,8 @@ public class ProductServiceImpl implements ProductService {
         }
 
         for (String id : productIds) {
-            Product product = productRepository.findById(id);
-            if (product != null) {
-                productRepository.updateAvailability(product, product.getInStock() > 0);
-            }
+            Optional<Product> productFound = productRepository.findById(id);
+            productFound.ifPresent(product -> productRepository.updateAvailability(product, product.getInStock() > 0));
         }
     }
 
