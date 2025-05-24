@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -42,7 +43,7 @@ public class ProductServiceImplTest {
         ProductInfo productInfo = new ProductInfo();
         productInfo.setName("Laptop");
         productInfo.setCategoryName("Electronics");
-        productInfo.setUnitPrice(1200.0f);
+        productInfo.setUnitPrice(new BigDecimal("1200.00"));
         productInfo.setInStock(10);
         productInfo.setExpirationDate(null);
 
@@ -51,7 +52,7 @@ public class ProductServiceImplTest {
                 .id(UUID.randomUUID().toString())
                 .name("Laptop")
                 .category(existingCategory)
-                .unitPrice(1200.0f)
+                .unitPrice(new BigDecimal("1200.00"))
                 .inStock(10)
                 .expirationDate(null)
                 .createdAt(LocalDate.now())
@@ -92,7 +93,7 @@ public class ProductServiceImplTest {
         ProductInfo productInfo = new ProductInfo();
         productInfo.setName(null);
         productInfo.setCategoryName("Electronics");
-        productInfo.setUnitPrice(100.0f);
+        productInfo.setUnitPrice(new BigDecimal("100.00"));
         productInfo.setInStock(5);
 
         // when
@@ -109,7 +110,7 @@ public class ProductServiceImplTest {
         ProductInfo productInfo = new ProductInfo();
         productInfo.setName("");
         productInfo.setCategoryName("Electronics");
-        productInfo.setUnitPrice(100.0f);
+        productInfo.setUnitPrice(new BigDecimal("100.00"));
         productInfo.setInStock(5);
 
         // when
@@ -126,7 +127,7 @@ public class ProductServiceImplTest {
         ProductInfo productInfo = new ProductInfo();
         productInfo.setName("Monitor");
         productInfo.setCategoryName(null);
-        productInfo.setUnitPrice(200.0f);
+        productInfo.setUnitPrice(new BigDecimal("200.00"));
         productInfo.setInStock(5);
 
         // when
@@ -143,7 +144,7 @@ public class ProductServiceImplTest {
         ProductInfo productInfo = new ProductInfo();
         productInfo.setName("Monitor");
         productInfo.setCategoryName("");
-        productInfo.setUnitPrice(200.0f);
+        productInfo.setUnitPrice(new BigDecimal("200.00"));
         productInfo.setInStock(5);
 
         // when
@@ -160,7 +161,7 @@ public class ProductServiceImplTest {
         ProductInfo productInfo = new ProductInfo();
         productInfo.setName("Mouse");
         productInfo.setCategoryName("Electronics");
-        productInfo.setUnitPrice(0.0f);
+        productInfo.setUnitPrice(BigDecimal.ZERO);
         productInfo.setInStock(10);
 
         // when
@@ -177,7 +178,7 @@ public class ProductServiceImplTest {
         ProductInfo productInfo = new ProductInfo();
         productInfo.setName("Keyboard");
         productInfo.setCategoryName("Electronics");
-        productInfo.setUnitPrice(50.0f);
+        productInfo.setUnitPrice(new BigDecimal("50.00"));
         productInfo.setInStock(-1);
 
         // when
@@ -194,7 +195,7 @@ public class ProductServiceImplTest {
         ProductInfo productInfo = new ProductInfo();
         productInfo.setName("Tablet");
         productInfo.setCategoryName("NonExistentCategory");
-        productInfo.setUnitPrice(300.0f);
+        productInfo.setUnitPrice(new BigDecimal("600.00"));
         productInfo.setInStock(5);
 
         when(categoryService.getCategoryByName("NonExistentCategory")).thenReturn(null);
@@ -214,7 +215,7 @@ public class ProductServiceImplTest {
         ProductInfo productInfo = new ProductInfo();
         productInfo.setName("ExistingProduct");
         productInfo.setCategoryName("Electronics");
-        productInfo.setUnitPrice(100.0f);
+        productInfo.setUnitPrice(new BigDecimal("100.00"));
         productInfo.setInStock(5);
 
         Category existingCategory = Category.builder().categoryName("Electronics").build();
@@ -241,7 +242,7 @@ public class ProductServiceImplTest {
         productInfo.setId(productId);
         productInfo.setName("Updated Laptop");
         productInfo.setCategoryName("Electronics");
-        productInfo.setUnitPrice(1300.0f);
+        productInfo.setUnitPrice(new BigDecimal("1300.00"));
         productInfo.setInStock(12);
         productInfo.setExpirationDate(LocalDate.now().plusDays(30));
 
@@ -249,7 +250,7 @@ public class ProductServiceImplTest {
                 .id(productId)
                 .name("Laptop")
                 .category(Category.builder().categoryName("Electronics").build())
-                .unitPrice(1200.0f)
+                .unitPrice(new BigDecimal("1200.00"))
                 .inStock(10)
                 .createdAt(LocalDate.now().minusDays(10))
                 .updatedAt(LocalDate.now())
@@ -268,7 +269,7 @@ public class ProductServiceImplTest {
         assertNotNull(updatedProduct);
         assertEquals(productId, updatedProduct.getId());
         assertEquals("Updated Laptop", updatedProduct.getName());
-        assertEquals(1300.0f, updatedProduct.getUnitPrice());
+        assertEquals(0, updatedProduct.getUnitPrice().compareTo(new BigDecimal("1300.00")));
         assertEquals(12, updatedProduct.getInStock());
         assertEquals("Electronics", updatedProduct.getCategory().getCategoryName());
         assertNotNull(updatedProduct.getUpdatedAt());
@@ -297,7 +298,7 @@ public class ProductServiceImplTest {
         ProductInfo productInfo = new ProductInfo();
         productInfo.setName("Test");
         productInfo.setCategoryName("Test");
-        productInfo.setUnitPrice(1.0f);
+        productInfo.setUnitPrice(BigDecimal.ONE);
         productInfo.setInStock(1);
         productInfo.setId(null);
 
@@ -317,7 +318,7 @@ public class ProductServiceImplTest {
         productInfo.setId(nonExistentId);
         productInfo.setName("NonExistent Product");
         productInfo.setCategoryName("Electronics");
-        productInfo.setUnitPrice(100.0f);
+        productInfo.setUnitPrice(new BigDecimal("100.00"));
         productInfo.setInStock(5);
 
         when(productRepository.findById(nonExistentId)).thenReturn(null);
@@ -339,14 +340,14 @@ public class ProductServiceImplTest {
         productInfo.setId(productId);
         productInfo.setName("Product");
         productInfo.setCategoryName("NonExistentCategory");
-        productInfo.setUnitPrice(100.0f);
+        productInfo.setUnitPrice(new BigDecimal("100.00"));
         productInfo.setInStock(5);
 
         Product existingProduct = Product.builder()
                 .id(productId)
                 .name("Product")
                 .category(Category.builder().categoryName("OldCategory").build())
-                .unitPrice(100.0f)
+                .unitPrice(new BigDecimal("100.00"))
                 .inStock(5)
                 .build();
 
@@ -536,8 +537,8 @@ public class ProductServiceImplTest {
         when(productRepository.getTotalValueOfInventoryByCategory()).thenReturn(Collections.emptyMap());
         when(productRepository.getAveragePriceOfInStockProductsByCategory()).thenReturn(Collections.emptyMap());
         when(productRepository.getTotalProductsInStock()).thenReturn(0);
-        when(productRepository.getTotalValueOfInventory()).thenReturn(0.0);
-        when(productRepository.getAveragePriceOfInStockProducts()).thenReturn(0.0);
+        when(productRepository.getTotalValueOfInventory()).thenReturn(BigDecimal.ZERO);
+        when(productRepository.getAveragePriceOfInStockProducts()).thenReturn(BigDecimal.ZERO);
 
         // when
         InventoryMetricsReport report = productService.getInventoryReport();
@@ -547,8 +548,8 @@ public class ProductServiceImplTest {
         assertTrue(report.getCategoryMetrics().isEmpty());
         assertNotNull(report.getOverallMetrics());
         assertEquals(0, report.getOverallMetrics().getTotalProductsInStock());
-        assertEquals(0.0, report.getOverallMetrics().getTotalValueInStock());
-        assertEquals(0.0, report.getOverallMetrics().getAveragePriceInStock());
+        assertEquals(BigDecimal.ZERO, report.getOverallMetrics().getTotalValueInStock(), String.valueOf(0.001));
+        assertEquals(BigDecimal.ZERO, report.getOverallMetrics().getAveragePriceInStock());
 
         verify(productRepository).getTotalProductsInStockByCategory();
         verify(productRepository).getTotalValueOfInventoryByCategory();
@@ -565,20 +566,20 @@ public class ProductServiceImplTest {
         productsInStockByCategory.put("Electronics", 15);
         productsInStockByCategory.put("Food", 20);
 
-        Map<String, Double> totalValueOfInventoryByCategory = new HashMap<>();
-        totalValueOfInventoryByCategory.put("Electronics", 1500.0);
-        totalValueOfInventoryByCategory.put("Food", 100.0);
+        Map<String, BigDecimal> totalValueOfInventoryByCategory = new HashMap<>();
+        totalValueOfInventoryByCategory.put("Electronics", new BigDecimal("1500.00"));
+        totalValueOfInventoryByCategory.put("Food", new BigDecimal("100.00"));
 
-        Map<String, Double> averagePriceOfInStockProductsByCategory = new HashMap<>();
-        averagePriceOfInStockProductsByCategory.put("Electronics", 100.0);
-        averagePriceOfInStockProductsByCategory.put("Food", 5.0);
+        Map<String, BigDecimal> averagePriceOfInStockProductsByCategory = new HashMap<>();
+        averagePriceOfInStockProductsByCategory.put("Electronics", new BigDecimal("100.00"));
+        averagePriceOfInStockProductsByCategory.put("Food", new BigDecimal("5.00"));
 
         when(productRepository.getTotalProductsInStockByCategory()).thenReturn(productsInStockByCategory);
         when(productRepository.getTotalValueOfInventoryByCategory()).thenReturn(totalValueOfInventoryByCategory);
         when(productRepository.getAveragePriceOfInStockProductsByCategory()).thenReturn(averagePriceOfInStockProductsByCategory);
         when(productRepository.getTotalProductsInStock()).thenReturn(35);
-        when(productRepository.getTotalValueOfInventory()).thenReturn(1600.0);
-        when(productRepository.getAveragePriceOfInStockProducts()).thenReturn(45.71); // Example average
+        when(productRepository.getTotalValueOfInventory()).thenReturn(new BigDecimal("1600.00"));
+        when(productRepository.getAveragePriceOfInStockProducts()).thenReturn(new BigDecimal("45.71")); // Example average
 
         // when
         InventoryMetricsReport report = productService.getInventoryReport();
@@ -588,22 +589,22 @@ public class ProductServiceImplTest {
         assertFalse(report.getCategoryMetrics().isEmpty());
         assertEquals(2, report.getCategoryMetrics().size());
 
-        CategoryMetrics electronicsMetrics = report.getCategoryMetrics().get(0);
+        CategoryMetrics electronicsMetrics = report.getCategoryMetrics().getFirst();
         assertEquals("Electronics", electronicsMetrics.getCategoryName());
         assertEquals(15, electronicsMetrics.getTotalProductsInStock());
-        assertEquals(1500.0, electronicsMetrics.getTotalValueInStock());
-        assertEquals(100.0, electronicsMetrics.getAveragePriceInStock());
+        assertEquals(new BigDecimal("1500.00"), electronicsMetrics.getTotalValueInStock());
+        assertEquals(new BigDecimal("100.00"), electronicsMetrics.getAveragePriceInStock());
 
         CategoryMetrics foodMetrics = report.getCategoryMetrics().get(1);
         assertEquals("Food", foodMetrics.getCategoryName());
         assertEquals(20, foodMetrics.getTotalProductsInStock());
-        assertEquals(100.0, foodMetrics.getTotalValueInStock());
-        assertEquals(5.0, foodMetrics.getAveragePriceInStock());
+        assertEquals(new BigDecimal("100.00"), foodMetrics.getTotalValueInStock());
+        assertEquals(new BigDecimal("5.00"), foodMetrics.getAveragePriceInStock());
 
         assertNotNull(report.getOverallMetrics());
         assertEquals(35, report.getOverallMetrics().getTotalProductsInStock());
-        assertEquals(1600.0, report.getOverallMetrics().getTotalValueInStock());
-        assertEquals(45.71, report.getOverallMetrics().getAveragePriceInStock());
+        assertEquals(new BigDecimal("1600.00"), report.getOverallMetrics().getTotalValueInStock());
+        assertEquals(new BigDecimal("45.71"), report.getOverallMetrics().getAveragePriceInStock());
 
         verify(productRepository).getTotalProductsInStockByCategory();
         verify(productRepository).getTotalValueOfInventoryByCategory();

@@ -3,6 +3,8 @@ package com.inventory.products.repository;
 import com.inventory.products.model.Product;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -65,24 +67,26 @@ public class ProductRepository {
                 .sum();
     }
 
-    public double getTotalValueOfInventory() {
+    public BigDecimal getTotalValueOfInventory() {
         return products.values().stream()
                 .filter(product -> product.getInStock() > 0)
-                .mapToDouble(product -> product.getUnitPrice() * product.getInStock())
-                .sum();
+                .map(product -> product.getUnitPrice().multiply(BigDecimal.valueOf(product.getInStock())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public double getAveragePriceOfInStockProducts() {
+    public BigDecimal getAveragePriceOfInStockProducts() {
         long count = products.values().stream()
                 .filter(product -> product.getInStock() > 0)
                 .count();
         if (count == 0) {
-            return 0;
+            return BigDecimal.ZERO;
         }
-        return products.values().stream()
+        BigDecimal totalUnitPrice = products.values().stream()
                 .filter(product -> product.getInStock() > 0)
-                .mapToDouble(Product::getUnitPrice)
-                .sum() / count;
+                .map(Product::getUnitPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return totalUnitPrice.divide(BigDecimal.valueOf(count), MathContext.DECIMAL64);
     }
 
     public Map<String, Integer> getTotalProductsInStockByCategory() {
@@ -91,25 +95,32 @@ public class ProductRepository {
                 .collect(Collectors.groupingBy(p -> p.getCategory().getCategoryName(), Collectors.summingInt(Product::getInStock)));
     }
 
-    public Map<String, Double> getTotalValueOfInventoryByCategory() {
+    public Map<String, BigDecimal> getTotalValueOfInventoryByCategory() {
         return products.values().stream()
                 .filter(product -> product.getInStock() > 0)
-                .collect(Collectors.groupingBy(p -> p.getCategory().getCategoryName(), Collectors.summingDouble(p -> p.getUnitPrice() * p.getInStock())));
+                .collect(Collectors.groupingBy(
+                        p -> p.getCategory().getCategoryName(),
+                        Collectors.reducing(BigDecimal.ZERO,
+                                product -> product.getUnitPrice().multiply(BigDecimal.valueOf(product.getInStock())),
+                                BigDecimal::add
+                        )
+                ));
     }
 
-    public Map<String, Double> getAveragePriceOfInStockProductsByCategory() {
+    public Map<String, BigDecimal> getAveragePriceOfInStockProductsByCategory() {
         Map<String, Long> counts = products.values().stream()
                 .filter(product -> product.getInStock() > 0)
                 .collect(Collectors.groupingBy(p -> p.getCategory().getCategoryName(), Collectors.counting()));
 
-        Map<String, Double> sums = products.values().stream()
+        Map<String, BigDecimal> sums = products.values().stream()
                 .filter(product -> product.getInStock() > 0)
-                .collect(Collectors.groupingBy(p -> p.getCategory().getCategoryName(), Collectors.summingDouble(Product::getUnitPrice)));
+                .collect(Collectors.groupingBy(p -> p.getCategory().getCategoryName(),
+                        Collectors.reducing(BigDecimal.ZERO, Product::getUnitPrice, BigDecimal::add)));
 
-        Map<String, Double> averages = new HashMap<>();
+        Map<String, BigDecimal> averages = new HashMap<>();
         sums.forEach((categoryName, sum) -> {
             Long count = counts.get(categoryName);
-            averages.put(categoryName, count == 0 ? 0 : sum / count);
+            averages.put(categoryName, count == 0 ? BigDecimal.ZERO : sum.divide(BigDecimal.valueOf(count), MathContext.DECIMAL64));
         });
         return averages;
     }
