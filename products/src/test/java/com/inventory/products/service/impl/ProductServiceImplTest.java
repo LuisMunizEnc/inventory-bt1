@@ -1,6 +1,7 @@
 package com.inventory.products.service.impl;
 
 import com.inventory.products.dto.CategoryMetrics;
+import com.inventory.products.dto.InventoryMetrics;
 import com.inventory.products.dto.InventoryMetricsReport;
 import com.inventory.products.dto.ProductInfo;
 import com.inventory.products.exception.EntityAlreadyExistsException;
@@ -537,12 +538,15 @@ public class ProductServiceImplTest {
     @Test
     public void givenNoProducts_whenGetInventoryReport_thenReturnEmptyReport() {
         // given
-        when(productRepository.getTotalProductsInStockByCategory()).thenReturn(Collections.emptyMap());
-        when(productRepository.getTotalValueOfInventoryByCategory()).thenReturn(Collections.emptyMap());
-        when(productRepository.getAveragePriceOfInStockProductsByCategory()).thenReturn(Collections.emptyMap());
-        when(productRepository.getTotalProductsInStock()).thenReturn(0);
-        when(productRepository.getTotalValueOfInventory()).thenReturn(BigDecimal.ZERO);
-        when(productRepository.getAveragePriceOfInStockProducts()).thenReturn(BigDecimal.ZERO);
+        InventoryMetrics emptyMetrics = new InventoryMetrics(
+                0,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                Collections.emptyMap()
+        );
+        when(productRepository.calculateInventoryMetrics()).thenReturn(emptyMetrics);
 
         // when
         InventoryMetricsReport report = productService.getInventoryReport();
@@ -552,15 +556,11 @@ public class ProductServiceImplTest {
         assertTrue(report.getCategoryMetrics().isEmpty());
         assertNotNull(report.getOverallMetrics());
         assertEquals(0, report.getOverallMetrics().getTotalProductsInStock());
-        assertEquals(BigDecimal.ZERO, report.getOverallMetrics().getTotalValueInStock(), String.valueOf(0.001));
+        assertEquals(BigDecimal.ZERO, report.getOverallMetrics().getTotalValueInStock());
         assertEquals(BigDecimal.ZERO, report.getOverallMetrics().getAveragePriceInStock());
 
-        verify(productRepository).getTotalProductsInStockByCategory();
-        verify(productRepository).getTotalValueOfInventoryByCategory();
-        verify(productRepository).getAveragePriceOfInStockProductsByCategory();
-        verify(productRepository).getTotalProductsInStock();
-        verify(productRepository).getTotalValueOfInventory();
-        verify(productRepository).getAveragePriceOfInStockProducts();
+        verify(productRepository).calculateInventoryMetrics();
+        verifyNoMoreInteractions(productRepository);
     }
 
     @Test
@@ -578,12 +578,15 @@ public class ProductServiceImplTest {
         averagePriceOfInStockProductsByCategory.put("Electronics", new BigDecimal("100.00"));
         averagePriceOfInStockProductsByCategory.put("Food", new BigDecimal("5.00"));
 
-        when(productRepository.getTotalProductsInStockByCategory()).thenReturn(productsInStockByCategory);
-        when(productRepository.getTotalValueOfInventoryByCategory()).thenReturn(totalValueOfInventoryByCategory);
-        when(productRepository.getAveragePriceOfInStockProductsByCategory()).thenReturn(averagePriceOfInStockProductsByCategory);
-        when(productRepository.getTotalProductsInStock()).thenReturn(35);
-        when(productRepository.getTotalValueOfInventory()).thenReturn(new BigDecimal("1600.00"));
-        when(productRepository.getAveragePriceOfInStockProducts()).thenReturn(new BigDecimal("45.71"));
+        InventoryMetrics someMetrics = new InventoryMetrics(
+                35,
+                new BigDecimal("1600.00"),
+                new BigDecimal("45.71"),
+                productsInStockByCategory,
+                totalValueOfInventoryByCategory,
+                averagePriceOfInStockProductsByCategory
+        );
+        when(productRepository.calculateInventoryMetrics()).thenReturn(someMetrics);
 
         // when
         InventoryMetricsReport report = productService.getInventoryReport();
@@ -593,13 +596,19 @@ public class ProductServiceImplTest {
         assertFalse(report.getCategoryMetrics().isEmpty());
         assertEquals(2, report.getCategoryMetrics().size());
 
-        CategoryMetrics electronicsMetrics = report.getCategoryMetrics().getFirst();
+        CategoryMetrics electronicsMetrics = report.getCategoryMetrics().stream()
+                .filter(cm -> cm.getCategoryName().equals("Electronics"))
+                .findFirst()
+                .orElseThrow();
         assertEquals("Electronics", electronicsMetrics.getCategoryName());
         assertEquals(15, electronicsMetrics.getTotalProductsInStock());
         assertEquals(new BigDecimal("1500.00"), electronicsMetrics.getTotalValueInStock());
         assertEquals(new BigDecimal("100.00"), electronicsMetrics.getAveragePriceInStock());
 
-        CategoryMetrics foodMetrics = report.getCategoryMetrics().get(1);
+        CategoryMetrics foodMetrics = report.getCategoryMetrics().stream()
+                .filter(cm -> cm.getCategoryName().equals("Food"))
+                .findFirst()
+                .orElseThrow();
         assertEquals("Food", foodMetrics.getCategoryName());
         assertEquals(20, foodMetrics.getTotalProductsInStock());
         assertEquals(new BigDecimal("100.00"), foodMetrics.getTotalValueInStock());
@@ -610,11 +619,7 @@ public class ProductServiceImplTest {
         assertEquals(new BigDecimal("1600.00"), report.getOverallMetrics().getTotalValueInStock());
         assertEquals(new BigDecimal("45.71"), report.getOverallMetrics().getAveragePriceInStock());
 
-        verify(productRepository).getTotalProductsInStockByCategory();
-        verify(productRepository).getTotalValueOfInventoryByCategory();
-        verify(productRepository).getAveragePriceOfInStockProductsByCategory();
-        verify(productRepository).getTotalProductsInStock();
-        verify(productRepository).getTotalValueOfInventory();
-        verify(productRepository).getAveragePriceOfInStockProducts();
+        verify(productRepository).calculateInventoryMetrics();
+        verifyNoMoreInteractions(productRepository);
     }
 }

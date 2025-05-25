@@ -1,5 +1,6 @@
 package com.inventory.products.repository;
 
+import com.inventory.products.dto.InventoryMetrics;
 import com.inventory.products.model.Product;
 import org.springframework.stereotype.Repository;
 
@@ -70,68 +71,48 @@ public class ProductRepository {
         products.put(product.getId(), product);
     }
 
-    public int getTotalProductsInStock() {
-        return products.values().stream()
-                .filter(product -> product.getInStock() > 0)
-                .mapToInt(Product::getInStock)
-                .sum();
+    private boolean isInStock(Product product){
+        return product.getInStock()>0;
     }
 
-    public BigDecimal getTotalValueOfInventory() {
-        return products.values().stream()
-                .filter(product -> product.getInStock() > 0)
-                .map(product -> product.getUnitPrice().multiply(BigDecimal.valueOf(product.getInStock())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
+    public InventoryMetrics calculateInventoryMetrics() {
+        List<Product> inStockProducts = products.values().stream()
+                .filter(this::isInStock)
+                .toList();
 
-    public BigDecimal getAveragePriceOfInStockProducts() {
-        long count = products.values().stream()
-                .filter(product -> product.getInStock() > 0)
-                .count();
-        if (count == 0) {
-            return BigDecimal.ZERO;
+        int totalProductsInStock = inStockProducts.size();
+        BigDecimal totalValueOfInventory = BigDecimal.ZERO;
+        BigDecimal sumOfUnitPrices = BigDecimal.ZERO;
+        Map<String, Integer> productsInStockByCategory = new HashMap<>();
+        Map<String, BigDecimal> totalValueOfInventoryByCategory = new HashMap<>();
+        Map<String, BigDecimal> sumOfUnitPricesByCategory = new HashMap<>();
+        Map<String, Long> countByCategory = new HashMap<>();
+
+        for (Product product : inStockProducts) {
+            BigDecimal productValue = product.getUnitPrice().multiply(BigDecimal.valueOf(product.getInStock()));
+            totalValueOfInventory = totalValueOfInventory.add(productValue);
+            sumOfUnitPrices = sumOfUnitPrices.add(product.getUnitPrice());
+
+            String categoryName = product.getCategory().getCategoryName();
+            productsInStockByCategory.merge(categoryName, product.getInStock(), Integer::sum);
+            totalValueOfInventoryByCategory.merge(categoryName, productValue, BigDecimal::add);
+            sumOfUnitPricesByCategory.merge(categoryName, product.getUnitPrice(), BigDecimal::add);
+            countByCategory.merge(categoryName, 1L, Long::sum);
         }
-        BigDecimal totalUnitPrice = products.values().stream()
-                .filter(product -> product.getInStock() > 0)
-                .map(Product::getUnitPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return totalUnitPrice.divide(BigDecimal.valueOf(count), MathContext.DECIMAL64);
-    }
-
-    public Map<String, Integer> getTotalProductsInStockByCategory() {
-        return products.values().stream()
-                .filter(product -> product.getInStock() > 0)
-                .collect(Collectors.groupingBy(p -> p.getCategory().getCategoryName(), Collectors.summingInt(Product::getInStock)));
-    }
-
-    public Map<String, BigDecimal> getTotalValueOfInventoryByCategory() {
-        return products.values().stream()
-                .filter(product -> product.getInStock() > 0)
-                .collect(Collectors.groupingBy(
-                        p -> p.getCategory().getCategoryName(),
-                        Collectors.reducing(BigDecimal.ZERO,
-                                product -> product.getUnitPrice().multiply(BigDecimal.valueOf(product.getInStock())),
-                                BigDecimal::add
-                        )
-                ));
-    }
-
-    public Map<String, BigDecimal> getAveragePriceOfInStockProductsByCategory() {
-        Map<String, Long> counts = products.values().stream()
-                .filter(product -> product.getInStock() > 0)
-                .collect(Collectors.groupingBy(p -> p.getCategory().getCategoryName(), Collectors.counting()));
-
-        Map<String, BigDecimal> sums = products.values().stream()
-                .filter(product -> product.getInStock() > 0)
-                .collect(Collectors.groupingBy(p -> p.getCategory().getCategoryName(),
-                        Collectors.reducing(BigDecimal.ZERO, Product::getUnitPrice, BigDecimal::add)));
-
-        Map<String, BigDecimal> averages = new HashMap<>();
-        sums.forEach((categoryName, sum) -> {
-            Long count = counts.get(categoryName);
-            averages.put(categoryName, count == 0 ? BigDecimal.ZERO : sum.divide(BigDecimal.valueOf(count), MathContext.DECIMAL64));
+        BigDecimal averagePriceOfInStockProducts = totalProductsInStock == 0 ? BigDecimal.ZERO : sumOfUnitPrices.divide(BigDecimal.valueOf(totalProductsInStock), MathContext.DECIMAL64);
+        Map<String, BigDecimal> averagePriceOfInStockProductsByCategory = new HashMap<>();
+        countByCategory.forEach((category, count) -> {
+            averagePriceOfInStockProductsByCategory.put(category, sumOfUnitPricesByCategory.get(category).divide(BigDecimal.valueOf(count), MathContext.DECIMAL64));
         });
-        return averages;
+
+        return new InventoryMetrics(
+                totalProductsInStock,
+                totalValueOfInventory,
+                averagePriceOfInStockProducts,
+                productsInStockByCategory,
+                totalValueOfInventoryByCategory,
+                averagePriceOfInStockProductsByCategory
+        );
     }
 }

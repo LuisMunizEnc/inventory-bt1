@@ -1,15 +1,12 @@
 package com.inventory.products.service.impl;
 
-import com.inventory.products.dto.CategoryMetrics;
-import com.inventory.products.dto.InventoryMetricsReport;
-import com.inventory.products.dto.OverallMetrics;
+import com.inventory.products.dto.*;
 import com.inventory.products.exception.EntityAlreadyExistsException;
 import com.inventory.products.exception.EntityNotFoundException;
 import com.inventory.products.model.Category;
 import com.inventory.products.model.Product;
 import com.inventory.products.repository.ProductRepository;
 import com.inventory.products.service.ProductService;
-import com.inventory.products.dto.ProductInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -128,41 +125,30 @@ public class ProductServiceImpl implements ProductService {
     }
 
     public InventoryMetricsReport getInventoryReport() {
-        List<CategoryMetrics> categoryMetricsList = getCategoryMetrics();
+        InventoryMetrics metrics = productRepository.calculateInventoryMetrics();
+        List<CategoryMetrics> categoryMetricsList = new ArrayList<>();
+
+        metrics.getProductsInStockByCategory().forEach((categoryName, count) -> {
+            categoryMetricsList.add(CategoryMetrics.builder()
+                    .categoryName(categoryName)
+                    .totalProductsInStock(count)
+                    .totalValueInStock(metrics.getTotalValueOfInventoryByCategory().getOrDefault(categoryName, BigDecimal.ZERO))
+                    .averagePriceInStock(metrics.getAveragePriceOfInStockProductsByCategory().getOrDefault(categoryName, BigDecimal.ZERO))
+                    .build());
+        });
 
         categoryMetricsList.sort(Comparator.comparing(CategoryMetrics::getCategoryName));
 
-        int overallTotalProductsInStock = productRepository.getTotalProductsInStock();
-        BigDecimal overallTotalValueOfInventory = productRepository.getTotalValueOfInventory();
-        BigDecimal overallAveragePriceOfInStockProducts = productRepository.getAveragePriceOfInStockProducts();
-
         OverallMetrics overallMetrics = OverallMetrics.builder()
-                .totalProductsInStock(overallTotalProductsInStock)
-                .totalValueInStock(overallTotalValueOfInventory)
-                .averagePriceInStock(overallAveragePriceOfInStockProducts)
+                .totalProductsInStock(metrics.getTotalProductsInStock())
+                .totalValueInStock(metrics.getTotalValueOfInventory())
+                .averagePriceInStock(metrics.getAveragePriceOfInStockProducts())
                 .build();
 
         return InventoryMetricsReport.builder()
                 .categoryMetrics(categoryMetricsList)
                 .overallMetrics(overallMetrics)
                 .build();
-    }
-
-    private List<CategoryMetrics> getCategoryMetrics() {
-        Map<String, Integer> productsInStockByCategory = productRepository.getTotalProductsInStockByCategory();
-        Map<String, BigDecimal> totalValueOfInventoryByCategory = productRepository.getTotalValueOfInventoryByCategory();
-        Map<String, BigDecimal> averagePriceOfInStockProductsByCategory = productRepository.getAveragePriceOfInStockProductsByCategory();
-
-        List<CategoryMetrics> categoryMetricsList = new ArrayList<>();
-        productsInStockByCategory.forEach((categoryName, count) -> {
-            categoryMetricsList.add(CategoryMetrics.builder()
-                    .categoryName(categoryName)
-                    .totalProductsInStock(count)
-                    .totalValueInStock(totalValueOfInventoryByCategory.getOrDefault(categoryName, BigDecimal.ZERO))
-                    .averagePriceInStock(averagePriceOfInStockProductsByCategory.getOrDefault(categoryName, BigDecimal.ZERO))
-                    .build());
-        });
-        return categoryMetricsList;
     }
 
 }
