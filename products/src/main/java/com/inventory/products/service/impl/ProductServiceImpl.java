@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.*;
-import java.time.LocalDate;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -115,23 +114,23 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findByCriteria(nameFilter, categoryFilter, availabilityFilter);
     }
 
-    public void updateProductAvailability(List<String> productIds) {
-        if (productIds == null || productIds.isEmpty()) {
-            throw new IllegalArgumentException("Product IDs list cannot be null or empty");
-        }
+    public void setProductInStock(String productId){
+        Optional<Product> productFound = productRepository.findById(productId);
+        productFound.ifPresent(product -> productRepository.updateAvailability
+                (product, true));
+    }
 
-        for (String id : productIds) {
-            Optional<Product> productFound = productRepository.findById(id);
-            productFound.ifPresent(product -> productRepository.updateAvailability
-                    (product, product.getInStock() > 0));
-        }
+    public void setProductOutOfStock(String productId){
+        Optional<Product> productFound = productRepository.findById(productId);
+        productFound.ifPresent(product -> productRepository.updateAvailability
+                (product, false));
     }
 
     private boolean isInStock(Product product){
         return product.getInStock()>0;
     }
 
-    public InventoryMetrics calculateInventoryMetrics() {
+    private InventoryMetrics calculateInventoryMetrics() {
         List<Product> inStockProducts = productRepository.findAll().stream()
                 .filter(this::isInStock)
                 .toList();
@@ -201,5 +200,5 @@ public class ProductServiceImpl implements ProductService {
                 .overallMetrics(overallMetrics)
                 .build();
     }
-
 }
+

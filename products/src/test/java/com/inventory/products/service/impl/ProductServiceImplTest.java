@@ -13,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -527,77 +526,92 @@ public class ProductServiceImplTest {
         verify(productRepository).findByCriteria(nameFilter, null, availabilityFilter);
     }
 
-    // --- Tests for updateProductAvailability ---
+    // --- Tests for setProductInStock ---
 
     @Test
-    public void givenProductIds_whenUpdateProductAvailability_thenStockIsToggled() {
+    public void givenExistingProductId_whenSetProductInStock_thenProductStockIsUpdated() {
         // given
-        String id1 = UUID.randomUUID().toString();
-        String id2 = UUID.randomUUID().toString();
-        List<String> productIds = Arrays.asList(id1, id2);
+        String productId = UUID.randomUUID().toString();
+        Product product = Product.builder()
+                .id(productId)
+                .inStock(0)
+                .build();
 
-        Product product1 = Product.builder().id(id1).name("Product 1").inStock(10).build(); // In stock
-        Product product2 = Product.builder().id(id2).name("Product 2").inStock(0).build();  // Out of stock
-
-        when(productRepository.findById(id1)).thenReturn(Optional.ofNullable(product1));
-        when(productRepository.findById(id2)).thenReturn(Optional.ofNullable(product2));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
         // when
-        productService.updateProductAvailability(productIds);
+        productService.setProductInStock(productId);
 
         // then
-        assertNotNull(product1);
-        verify(productRepository).updateAvailability(product1, true);
-        assertNotNull(product2);
-        verify(productRepository).updateAvailability(product2, false);
+        verify(productRepository).findById(productId);
+        verify(productRepository).updateAvailability(product, true);
     }
 
     @Test
-    public void givenNullProductIds_whenUpdateProductAvailability_thenThrowIllegalArgumentException() {
+    public void givenNonExistingProductId_whenSetProductInStock_thenNoActionTaken() {
         // given
-        List<String> productIds = null;
+        String nonExistentId = UUID.randomUUID().toString();
+        when(productRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
         // when
+        productService.setProductInStock(nonExistentId);
+
         // then
-        assertThatThrownBy(() -> productService.updateProductAvailability(productIds))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Product IDs list cannot be null or empty");
-        verifyNoInteractions(productRepository);
+        verify(productRepository).findById(nonExistentId);
+        verifyNoMoreInteractions(productRepository);
+    }
+
+    // --- Tests for setProductOutOfStock ---
+
+    @Test
+    public void givenExistingProductId_whenSetProductOutOfStock_thenProductStockIsUpdated() {
+        // given
+        String productId = UUID.randomUUID().toString();
+        Product product = Product.builder()
+                .id(productId)
+                .inStock(10)
+                .build();
+
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+
+        // when
+        productService.setProductOutOfStock(productId);
+        // then
+        verify(productRepository).findById(productId);
+        verify(productRepository).updateAvailability(product, false);
     }
 
     @Test
-    public void givenEmptyProductIds_whenUpdateProductAvailability_thenThrowIllegalArgumentException() {
+    public void givenProductAlreadyOutOfStock_whenSetProductOutOfStock_thenStockRemainsZero() {
         // given
-        List<String> productIds = new ArrayList<>();
+        String productId = UUID.randomUUID().toString();
+        Product product = Product.builder()
+                .id(productId)
+                .inStock(0)
+                .build();
+
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
         // when
+        productService.setProductOutOfStock(productId);
+
         // then
-        assertThatThrownBy(() -> productService.updateProductAvailability(productIds))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Product IDs list cannot be null or empty");
-        verifyNoInteractions(productRepository);
+        verify(productRepository).findById(productId);
+        verify(productRepository).updateAvailability(product, false);
+        assertEquals(0, product.getInStock());
     }
 
     @Test
-    public void givenProductIdsWithNonExistingProduct_whenUpdateProductAvailability_thenNonExistingAreSkipped() {
+    public void givenNonExistingProductId_whenSetProductOutOfStock_thenNoActionTaken() {
         // given
-        String id1 = UUID.randomUUID().toString();
-        String id2 = UUID.randomUUID().toString();
-        List<String> productIds = Arrays.asList(id1, id2);
-
-        Product product1 = Product.builder().id(id1).name("Product 1").inStock(10).build();
-
-        when(productRepository.findById(id1)).thenReturn(Optional.ofNullable(product1));
-        when(productRepository.findById(id2)).thenReturn(Optional.empty());
+        String nonExistentId = UUID.randomUUID().toString();
+        when(productRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
         // when
-        productService.updateProductAvailability(productIds);
+        productService.setProductOutOfStock(nonExistentId);
 
         // then
-        verify(productRepository).findById(id1);
-        verify(productRepository).findById(id2);
-        assertNotNull(product1);
-        verify(productRepository).updateAvailability(product1, true);
+        verify(productRepository).findById(nonExistentId);
         verifyNoMoreInteractions(productRepository);
     }
 

@@ -1,11 +1,8 @@
 package com.inventory.products.repository;
 
-import com.inventory.products.dto.InventoryMetrics;
 import com.inventory.products.model.Product;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.math.MathContext;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -64,9 +61,8 @@ public class ProductRepository {
         return !availabilityFilter || product.getInStock() > 0;
     }
 
-    // Toggle availability
-    public void updateAvailability(Product product, boolean inStock) {
-        product.setInStock(inStock ? 0 : 10);
+    public void updateAvailability(Product product, boolean setStock) {
+        product.setInStock(setStock ? 10 : 0);
         product.setUpdatedAt(LocalDate.now());
         products.put(product.getId(), product);
     }

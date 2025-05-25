@@ -1,6 +1,5 @@
 package com.inventory.products.service;
 
-import com.inventory.products.dto.CategoryMetrics;
 import com.inventory.products.dto.InventoryMetricsReport;
 import com.inventory.products.model.Product;
 import com.inventory.products.dto.ProductInfo;
@@ -18,7 +17,9 @@ public interface ProductService {
 
     List<Product> getProductsByCriteria(String name, List<String> categoryFilter, boolean availability);
 
-    void updateProductAvailability(List<String> productsIds);
+    void setProductInStock(String productId);
+
+    void setProductOutOfStock(String productId);
 
     InventoryMetricsReport getInventoryReport();
 }
