@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -45,10 +46,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Category getCategoryByName(String categoryName){
-        Category foundCategory =  categoryRepository.findByName(categoryName);
-        if(foundCategory == null){
-            throw new EntityNotFoundException("Category with name " + categoryName + " doesn't exist");
-        }
-        return foundCategory;
+        Optional<Category> foundCategory =  categoryRepository.findByName(categoryName);
+        return foundCategory.orElseThrow(() -> new EntityNotFoundException("Category with name " + categoryName + " doesn't exist"));
     }
 }
