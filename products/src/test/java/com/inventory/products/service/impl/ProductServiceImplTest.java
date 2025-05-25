@@ -459,6 +459,76 @@ public class ProductServiceImplTest {
         verify(productRepository).findById(nonExistentId);
     }
 
+    // --- Tests for getProductsByCriteria ---
+
+    @Test
+    public void givenNameFilter_whenGetProductsByCriteria_thenReturnMatchingProducts() {
+        // given
+        String nameFilter = "lap";
+        List<Product> allProducts = Arrays.asList(
+                Product.builder().name("Laptop Pro").category(Category.builder().categoryName("Electronics").build()).inStock(5).build(),
+                Product.builder().name("Mouse").category(Category.builder().categoryName("Electronics").build()).inStock(10).build(),
+                Product.builder().name("Tablet").category(Category.builder().categoryName("Electronics").build()).inStock(0).build(),
+                Product.builder().name("Apple Pie").category(Category.builder().categoryName("Food").build()).inStock(15).build()
+        );
+        when(productRepository.findByCriteria(nameFilter, null, false)).thenReturn(Arrays.asList(allProducts.get(0)));
+
+        // when
+        List<Product> filteredProducts = productService.getProductsByCriteria(nameFilter, null, false);
+
+        // then
+        assertNotNull(filteredProducts);
+        assertEquals(1, filteredProducts.size());
+        assertEquals("Laptop Pro", filteredProducts.getFirst().getName());
+        verify(productRepository).findByCriteria(nameFilter, null, false);
+    }
+
+    @Test
+    public void givenCategoryFilter_whenGetProductsByCriteria_thenReturnMatchingProducts() {
+        // given
+        List<String> categoryFilter = List.of("Electronics");
+        List<Product> allProducts = Arrays.asList(
+                Product.builder().name("Laptop Pro").category(Category.builder().categoryName("Electronics").build()).inStock(5).build(),
+                Product.builder().name("Mouse").category(Category.builder().categoryName("Electronics").build()).inStock(10).build(),
+                Product.builder().name("Tablet").category(Category.builder().categoryName("Electronics").build()).inStock(0).build(),
+                Product.builder().name("Apple Pie").category(Category.builder().categoryName("Food").build()).inStock(15).build()
+        );
+        when(productRepository.findByCriteria(null, categoryFilter, false)).thenReturn(Arrays.asList(allProducts.get(0), allProducts.get(1), allProducts.get(2)));
+
+        // when
+        List<Product> filteredProducts = productService.getProductsByCriteria(null, categoryFilter, false);
+
+        // then
+        assertNotNull(filteredProducts);
+        assertEquals(3, filteredProducts.size());
+        assertTrue(filteredProducts.stream().allMatch(p -> p.getCategory().getCategoryName().equals("Electronics")));
+        verify(productRepository).findByCriteria(null, categoryFilter, false);
+    }
+
+    @Test
+    public void givenNameAndAvailabilityFilter_whenGetProductsByCriteria_thenReturnMatchingProducts() {
+        // given
+        String nameFilter = "lap";
+        boolean availabilityFilter = true;
+        List<Product> allProducts = Arrays.asList(
+                Product.builder().name("Laptop Pro").category(Category.builder().categoryName("Electronics").build()).inStock(5).build(),
+                Product.builder().name("Laptop Basic").category(Category.builder().categoryName("Electronics").build()).inStock(0).build(),
+                Product.builder().name("Mouse").category(Category.builder().categoryName("Electronics").build()).inStock(10).build(),
+                Product.builder().name("Apple Pie").category(Category.builder().categoryName("Food").build()).inStock(15).build()
+        );
+        when(productRepository.findByCriteria(nameFilter, null, availabilityFilter)).thenReturn(Arrays.asList(allProducts.get(0)));
+
+        // when
+        List<Product> filteredProducts = productService.getProductsByCriteria(nameFilter, null, availabilityFilter);
+
+        // then
+        assertNotNull(filteredProducts);
+        assertEquals(1, filteredProducts.size());
+        assertEquals("Laptop Pro", filteredProducts.getFirst().getName());
+        assertTrue(filteredProducts.getFirst().getInStock()>0);
+        verify(productRepository).findByCriteria(nameFilter, null, availabilityFilter);
+    }
+
     // --- Tests for updateProductAvailability ---
 
     @Test
