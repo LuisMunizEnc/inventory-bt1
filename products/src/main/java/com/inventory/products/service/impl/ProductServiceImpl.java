@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.*;
 import java.time.LocalDate;
 
@@ -109,7 +110,8 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findAll();
     }
 
-    public List<Product> getProductsByCriteria(String nameFilter, List<String> categoryFilter, boolean availabilityFilter) {
+    public List<Product> getProductsByCriteria(String nameFilter, List<String> categoryFilter,
+                                               boolean availabilityFilter) {
         return productRepository.findByCriteria(nameFilter, categoryFilter, availabilityFilter);
     }
 
@@ -120,12 +122,61 @@ public class ProductServiceImpl implements ProductService {
 
         for (String id : productIds) {
             Optional<Product> productFound = productRepository.findById(id);
-            productFound.ifPresent(product -> productRepository.updateAvailability(product, product.getInStock() > 0));
+            productFound.ifPresent(product -> productRepository.updateAvailability
+                    (product, product.getInStock() > 0));
         }
     }
 
+    private boolean isInStock(Product product){
+        return product.getInStock()>0;
+    }
+
+    public InventoryMetrics calculateInventoryMetrics() {
+        List<Product> inStockProducts = productRepository.findAll().stream()
+                .filter(this::isInStock)
+                .toList();
+
+        int totalProductsInStock = inStockProducts.size();
+        BigDecimal totalValueOfInventory = BigDecimal.ZERO;
+        BigDecimal sumOfUnitPrices = BigDecimal.ZERO;
+        Map<String, Integer> productsInStockByCategory = new HashMap<>();
+        Map<String, BigDecimal> totalValueOfInventoryByCategory = new HashMap<>();
+        Map<String, BigDecimal> sumOfUnitPricesByCategory = new HashMap<>();
+        Map<String, Long> countByCategory = new HashMap<>();
+
+        for (Product product : inStockProducts) {
+            BigDecimal productValue = product.getUnitPrice().multiply(BigDecimal.valueOf(product.getInStock()));
+            totalValueOfInventory = totalValueOfInventory.add(productValue);
+            sumOfUnitPrices = sumOfUnitPrices.add(product.getUnitPrice());
+
+            String categoryName = product.getCategory().getCategoryName();
+            productsInStockByCategory.merge(categoryName, product.getInStock(), Integer::sum);
+            totalValueOfInventoryByCategory.merge(categoryName, productValue, BigDecimal::add);
+            sumOfUnitPricesByCategory.merge(categoryName, product.getUnitPrice(), BigDecimal::add);
+            countByCategory.merge(categoryName, 1L, Long::sum);
+        }
+
+        BigDecimal averagePriceOfInStockProducts = totalProductsInStock == 0 ? BigDecimal.ZERO :
+                sumOfUnitPrices.divide(BigDecimal.valueOf(totalProductsInStock), MathContext.DECIMAL64);
+        Map<String, BigDecimal> averagePriceOfInStockProductsByCategory = new HashMap<>();
+        countByCategory.forEach((category, count) -> {
+            averagePriceOfInStockProductsByCategory.put
+                    (category, sumOfUnitPricesByCategory.get(category).divide(BigDecimal.valueOf(count),
+                            MathContext.DECIMAL64));
+        });
+
+        return new InventoryMetrics(
+                totalProductsInStock,
+                totalValueOfInventory,
+                averagePriceOfInStockProducts,
+                productsInStockByCategory,
+                totalValueOfInventoryByCategory,
+                averagePriceOfInStockProductsByCategory
+        );
+    }
+
     public InventoryMetricsReport getInventoryReport() {
-        InventoryMetrics metrics = productRepository.calculateInventoryMetrics();
+        InventoryMetrics metrics = calculateInventoryMetrics();
         List<CategoryMetrics> categoryMetricsList = new ArrayList<>();
 
         metrics.getProductsInStockByCategory().forEach((categoryName, count) -> {

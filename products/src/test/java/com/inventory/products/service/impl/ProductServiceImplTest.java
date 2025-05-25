@@ -1,9 +1,6 @@
 package com.inventory.products.service.impl;
 
-import com.inventory.products.dto.CategoryMetrics;
-import com.inventory.products.dto.InventoryMetrics;
-import com.inventory.products.dto.InventoryMetricsReport;
-import com.inventory.products.dto.ProductInfo;
+import com.inventory.products.dto.*;
 import com.inventory.products.exception.EntityAlreadyExistsException;
 import com.inventory.products.exception.EntityNotFoundException;
 import com.inventory.products.model.Category;
@@ -16,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -606,90 +604,135 @@ public class ProductServiceImplTest {
     // --- Tests for getInventoryReport ---
 
     @Test
-    public void givenNoProducts_whenGetInventoryReport_thenReturnEmptyReport() {
+    public void givenEmptyInventory_whenGetInventoryReport_thenReturnEmptyMetrics() {
         // given
-        InventoryMetrics emptyMetrics = new InventoryMetrics(
-                0,
-                BigDecimal.ZERO,
-                BigDecimal.ZERO,
-                Collections.emptyMap(),
-                Collections.emptyMap(),
-                Collections.emptyMap()
-        );
-        when(productRepository.calculateInventoryMetrics()).thenReturn(emptyMetrics);
+        when(productRepository.findAll()).thenReturn(Collections.emptyList());
 
         // when
         InventoryMetricsReport report = productService.getInventoryReport();
 
         // then
         assertNotNull(report);
+        assertNotNull(report.getCategoryMetrics());
         assertTrue(report.getCategoryMetrics().isEmpty());
-        assertNotNull(report.getOverallMetrics());
-        assertEquals(0, report.getOverallMetrics().getTotalProductsInStock());
-        assertEquals(BigDecimal.ZERO, report.getOverallMetrics().getTotalValueInStock());
-        assertEquals(BigDecimal.ZERO, report.getOverallMetrics().getAveragePriceInStock());
 
-        verify(productRepository).calculateInventoryMetrics();
-        verifyNoMoreInteractions(productRepository);
+        OverallMetrics overall = report.getOverallMetrics();
+        assertNotNull(overall);
+        assertEquals(0, overall.getTotalProductsInStock());
+        assertEquals(BigDecimal.ZERO, overall.getTotalValueInStock());
+        assertEquals(BigDecimal.ZERO, overall.getAveragePriceInStock());
+
+        verify(productRepository).findAll();
     }
 
     @Test
-    public void givenSomeProducts_whenGetInventoryReport_thenReturnCorrectReport() {
+    public void givenSingleProductInInventory_whenGetInventoryReport_thenReturnCorrectMetrics() {
         // given
-        Map<String, Integer> productsInStockByCategory = new HashMap<>();
-        productsInStockByCategory.put("Electronics", 15);
-        productsInStockByCategory.put("Food", 20);
+        Category electronics = Category.builder().categoryName("Electronics").build();
+        Product laptop = Product.builder()
+                .name("Laptop")
+                .category(electronics)
+                .unitPrice(new BigDecimal("1200.00"))
+                .inStock(5)
+                .build();
 
-        Map<String, BigDecimal> totalValueOfInventoryByCategory = new HashMap<>();
-        totalValueOfInventoryByCategory.put("Electronics", new BigDecimal("1500.00"));
-        totalValueOfInventoryByCategory.put("Food", new BigDecimal("100.00"));
-
-        Map<String, BigDecimal> averagePriceOfInStockProductsByCategory = new HashMap<>();
-        averagePriceOfInStockProductsByCategory.put("Electronics", new BigDecimal("100.00"));
-        averagePriceOfInStockProductsByCategory.put("Food", new BigDecimal("5.00"));
-
-        InventoryMetrics someMetrics = new InventoryMetrics(
-                35,
-                new BigDecimal("1600.00"),
-                new BigDecimal("45.71"),
-                productsInStockByCategory,
-                totalValueOfInventoryByCategory,
-                averagePriceOfInStockProductsByCategory
-        );
-        when(productRepository.calculateInventoryMetrics()).thenReturn(someMetrics);
+        when(productRepository.findAll()).thenReturn(List.of(laptop));
 
         // when
         InventoryMetricsReport report = productService.getInventoryReport();
 
         // then
         assertNotNull(report);
-        assertFalse(report.getCategoryMetrics().isEmpty());
-        assertEquals(2, report.getCategoryMetrics().size());
 
-        CategoryMetrics electronicsMetrics = report.getCategoryMetrics().stream()
-                .filter(cm -> cm.getCategoryName().equals("Electronics"))
-                .findFirst()
-                .orElseThrow();
+        OverallMetrics overall = report.getOverallMetrics();
+        assertEquals(1, overall.getTotalProductsInStock());
+        assertEquals(new BigDecimal("6000.00"), overall.getTotalValueInStock());
+        assertEquals(new BigDecimal("1200.00"), overall.getAveragePriceInStock());
+
+        List<CategoryMetrics> categoryMetrics = report.getCategoryMetrics();
+        assertEquals(1, categoryMetrics.size());
+
+        CategoryMetrics electronicsMetrics = categoryMetrics.getFirst();
         assertEquals("Electronics", electronicsMetrics.getCategoryName());
-        assertEquals(15, electronicsMetrics.getTotalProductsInStock());
-        assertEquals(new BigDecimal("1500.00"), electronicsMetrics.getTotalValueInStock());
-        assertEquals(new BigDecimal("100.00"), electronicsMetrics.getAveragePriceInStock());
+        assertEquals(5, electronicsMetrics.getTotalProductsInStock());
+        assertEquals(new BigDecimal("6000.00"), electronicsMetrics.getTotalValueInStock());
+        assertEquals(new BigDecimal("1200.00"), electronicsMetrics.getAveragePriceInStock());
 
-        CategoryMetrics foodMetrics = report.getCategoryMetrics().stream()
-                .filter(cm -> cm.getCategoryName().equals("Food"))
-                .findFirst()
-                .orElseThrow();
+        verify(productRepository).findAll();
+    }
+
+    @Test
+    public void givenMultipleProductsInMultipleCategories_whenGetInventoryReport_thenReturnCorrectMetrics() {
+        // given
+        Category electronics = Category.builder().categoryName("Electronics").build();
+        Category food = Category.builder().categoryName("Food").build();
+
+        List<Product> products = Arrays.asList(
+                Product.builder().name("Laptop").category(electronics)
+                        .unitPrice(new BigDecimal("1200.00")).inStock(2).build(),
+                Product.builder().name("Phone").category(electronics)
+                        .unitPrice(new BigDecimal("800.00")).inStock(3).build(),
+                Product.builder().name("Apple").category(food)
+                        .unitPrice(new BigDecimal("1.50")).inStock(10).build(),
+                Product.builder().name("Bread").category(food)
+                        .unitPrice(new BigDecimal("2.00")).inStock(0).build()
+        );
+
+        when(productRepository.findAll()).thenReturn(products);
+
+        InventoryMetricsReport report = productService.getInventoryReport();
+
+        assertNotNull(report);
+
+        OverallMetrics overall = report.getOverallMetrics();
+        assertEquals(3, overall.getTotalProductsInStock());
+        assertEquals(new BigDecimal("4815.00"), overall.getTotalValueInStock());
+        assertTrue(overall.getAveragePriceInStock().compareTo(new BigDecimal("667.16")) >= 0.01);
+
+        List<CategoryMetrics> categoryMetrics = report.getCategoryMetrics();
+        assertEquals(2, categoryMetrics.size());
+
+        CategoryMetrics electronicsMetrics = categoryMetrics.getFirst();
+        assertEquals("Electronics", electronicsMetrics.getCategoryName());
+        assertEquals(5, electronicsMetrics.getTotalProductsInStock());
+        assertEquals(new BigDecimal("4800.00"), electronicsMetrics.getTotalValueInStock());
+        assertEquals(new BigDecimal("1000.00"), electronicsMetrics.getAveragePriceInStock());
+
+        CategoryMetrics foodMetrics = categoryMetrics.get(1);
         assertEquals("Food", foodMetrics.getCategoryName());
-        assertEquals(20, foodMetrics.getTotalProductsInStock());
-        assertEquals(new BigDecimal("100.00"), foodMetrics.getTotalValueInStock());
-        assertEquals(new BigDecimal("5.00"), foodMetrics.getAveragePriceInStock());
+        assertEquals(10, foodMetrics.getTotalProductsInStock());
+        assertEquals(new BigDecimal("15.00"), foodMetrics.getTotalValueInStock());
+        assertEquals(new BigDecimal("1.50"), foodMetrics.getAveragePriceInStock());
 
-        assertNotNull(report.getOverallMetrics());
-        assertEquals(35, report.getOverallMetrics().getTotalProductsInStock());
-        assertEquals(new BigDecimal("1600.00"), report.getOverallMetrics().getTotalValueInStock());
-        assertEquals(new BigDecimal("45.71"), report.getOverallMetrics().getAveragePriceInStock());
+        verify(productRepository).findAll();
+    }
 
-        verify(productRepository).calculateInventoryMetrics();
-        verifyNoMoreInteractions(productRepository);
+    @Test
+    public void givenProductsOutOfStock_whenGetInventoryReport_thenExcludeFromMetrics() {
+        // given
+        Category electronics = Category.builder().categoryName("Electronics").build();
+
+        List<Product> products = Arrays.asList(
+                Product.builder().name("Laptop").category(electronics)
+                        .unitPrice(new BigDecimal("1200.00")).inStock(0).build(),
+                Product.builder().name("Phone").category(electronics)
+                        .unitPrice(new BigDecimal("800.00")).inStock(0).build()
+        );
+
+        when(productRepository.findAll()).thenReturn(products);
+
+        // when
+        InventoryMetricsReport report = productService.getInventoryReport();
+
+        // then
+        assertNotNull(report);
+
+        OverallMetrics overall = report.getOverallMetrics();
+        assertEquals(0, overall.getTotalProductsInStock());
+        assertEquals(BigDecimal.ZERO, overall.getTotalValueInStock());
+        assertEquals(BigDecimal.ZERO, overall.getAveragePriceInStock());
+        assertTrue(report.getCategoryMetrics().isEmpty());
+
+        verify(productRepository).findAll();
     }
 }
