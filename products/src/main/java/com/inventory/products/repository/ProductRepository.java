@@ -41,7 +41,7 @@ public class ProductRepository {
                 .anyMatch(p -> p.getName().equalsIgnoreCase(name));
     }
 
-    public List<Product> findByCriteria(String nameFilter, List<String> categoryFilter, boolean availabilityFilter) {
+    public List<Product> findByCriteria(String nameFilter, List<String> categoryFilter, Boolean availabilityFilter) {
         return products.values().stream()
                 .filter(product -> isNameMatching(product, nameFilter))
                 .filter(product -> isCategoryMatching(product, categoryFilter))

@@ -110,7 +110,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     public List<Product> getProductsByCriteria(String nameFilter, List<String> categoryFilter,
-                                               boolean availabilityFilter) {
+                                               Boolean availabilityFilter) {
         return productRepository.findByCriteria(nameFilter, categoryFilter, availabilityFilter);
     }
 

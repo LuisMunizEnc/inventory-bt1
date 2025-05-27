@@ -17,6 +17,7 @@ import static org.springframework.util.StringUtils.hasText;
 @Slf4j
 @RestController
 @RequestMapping("/products")
+@CrossOrigin
 public class ProductController {
 
     private final ProductService productService;

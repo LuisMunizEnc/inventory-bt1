@@ -15,7 +15,7 @@ public interface ProductService {
 
     List<Product> getAllProducts();
 
-    List<Product> getProductsByCriteria(String name, List<String> categoryFilter, boolean availability);
+    List<Product> getProductsByCriteria(String name, List<String> categoryFilter, Boolean availability);
 
     void setProductInStock(String productId);
 
