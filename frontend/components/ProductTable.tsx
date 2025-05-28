@@ -6,21 +6,24 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Package, Edit, Plus, Trash } from "lucide-react"
+import { Package, Edit, Plus, Trash, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "../hooks/redux"
 import { fetchProducts } from "../store/slices/productsSlice"
 import { fetchCategories } from "../store/slices/categoriesSlice"
-import type { Product, Category } from "../types"
+import type { Product, Category, SortConfig } from "../types"
 import { productService } from "../services/productService"
 import { ProductModal } from "./modal/ProductModal"
 import { CategoryModal } from "./modal/CategoryModal"
 import { DeleteProductModal } from "./modal/DeleteProductModal"
 import { EditProductModal } from "./modal/EditProductModal"
+import { useSorting } from "../hooks/useSorting"
 
 export function ProductTable() {
   const dispatch = useAppDispatch()
   const { products, loading, error } = useAppSelector((state) => state.products)
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null)
+  const { sortedData, sortConfig, handleSort, clearSort } = useSorting(products)
+
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -57,6 +60,39 @@ export function ProductTable() {
       return <Badge variant="default">{quantity}</Badge>
     }
   }
+
+  const getSortIcon = (field: SortConfig["field"]) => {
+    if (!sortConfig || sortConfig.field !== field) {
+      return <ArrowUpDown className="h-4 w-4 text-gray-400" />
+    }
+
+    return sortConfig.direction === "asc" ? (
+      <ArrowUp className="h-4 w-4 text-blue-600" />
+    ) : (
+      <ArrowDown className="h-4 w-4 text-blue-600" />
+    )
+  }
+
+  const SortableHeader = ({
+    field,
+    children,
+  }: {
+    field: SortConfig["field"]
+    children: React.ReactNode
+  }) => (
+    <TableHead>
+      <Button
+        variant="ghost"
+        className="h-auto p-0 font-semibold hover:bg-transparent"
+        onClick={() => handleSort(field)}
+      >
+        <div className="flex items-center gap-2">
+          {children}
+          {getSortIcon(field)}
+        </div>
+      </Button>
+    </TableHead>
+  )
 
   const handleToggleStock = async (product: Product) => {
     try {
@@ -126,7 +162,7 @@ export function ProductTable() {
     <Card>
       <CardHeader> 
         <CardTitle className="flex items-center justify-between">
-          <span>Products ({products.length})</span>
+          <span>Products ({sortedData.length})</span>
           <div className="gap-2 flex items-center">
             <Button variant="outline" onClick={() => setIsCategoryModalOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -140,7 +176,7 @@ export function ProductTable() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {products.length === 0 ? (
+        {sortedData.length === 0 ? (
           <div className="text-center py-8">
             <Package className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <p className="text-gray-500">No products found</p>
@@ -151,17 +187,17 @@ export function ProductTable() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Stock Action</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Unit Price</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Expiration</TableHead>
+                <TableHead>Stock Action</TableHead>
+                  <SortableHeader field="name">Name</SortableHeader>
+                  <SortableHeader field="category">Category</SortableHeader>
+                  <SortableHeader field="unitPrice">Unit Price</SortableHeader>
+                  <SortableHeader field="inStock">Stock</SortableHeader>
+                  <SortableHeader field="expirationDate">Expiration</SortableHeader>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products.map((product: Product) => (
+                {sortedData.map((product: Product) => (
                   <TableRow key={product.id}>
                     <TableCell>
                       <Button

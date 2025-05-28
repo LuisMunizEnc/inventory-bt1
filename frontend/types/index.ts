@@ -25,4 +25,9 @@ export interface ProductFilters {
     name?: string
     categories?: string[]
     inStock?: boolean | null
-}  
+}
+
+export interface SortConfig {
+    field: "name" | "category" | "unitPrice" | "inStock" | "expirationDate"
+    direction: "asc" | "desc"
+  }
