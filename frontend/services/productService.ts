@@ -1,8 +1,8 @@
 import { api } from "./api"
-import type { ProductInfo, ProductFilters } from "../types"
+import type { Product, ProductInfo, ProductFilters } from "../types"
 
 export const productService = {
-  getAllProducts: async (filters?: ProductFilters): Promise<ProductInfo[]> => {
+  getAllProducts: async (filters?: ProductFilters): Promise<Product[]> => {
     const params = new URLSearchParams()
 
     if (filters?.name) {
@@ -23,17 +23,17 @@ export const productService = {
     return response.data
   },
 
-  getProductById: async (id: string): Promise<ProductInfo> => {
+  getProductById: async (id: string): Promise<Product> => {
     const response = await api.get(`/products/${id}`)
     return response.data
   },
 
-  createProduct: async (productInfo: ProductInfo): Promise<ProductInfo> => {
+  createProduct: async (productInfo: ProductInfo): Promise<Product> => {
     const response = await api.post("/products", productInfo)
     return response.data
   },
 
-  updateProduct: async (id: string, productInfo: ProductInfo): Promise<ProductInfo> => {
+  updateProduct: async (id: string, productInfo: ProductInfo): Promise<Product> => {
     const response = await api.put(`/products/${id}`, productInfo)
     return response.data
   },

@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
-import type { ProductInfo, ProductFilters } from "../../types"
+import type { Product, ProductInfo, ProductFilters } from "../../types"
 import { productService } from "../../services/productService"
 
 interface ProductsState {
-  products: ProductInfo[]
+  products: Product[]
   loading: boolean
   error: string | null
   filters: ProductFilters
@@ -23,6 +23,19 @@ const initialState: ProductsState = {
 export const fetchProducts = createAsyncThunk("products/fetchProducts", async (filters?: ProductFilters) => {
   return await productService.getAllProducts(filters)
 })
+
+export const markProductOutOfStock = createAsyncThunk(
+  "products/markOutOfStock",
+  async (id: string) => {
+    return await productService.markOutOfStock(id)
+  },
+)
+
+export const markProductInStock = createAsyncThunk(
+  "products/markInStock", async (id: string, { rejectWithValue }) => {
+    return await productService.markInStock(id)
+  },
+)
 
 const productsSlice = createSlice({
   name: "products",
@@ -46,14 +59,18 @@ const productsSlice = createSlice({
         state.error = null
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
-        console.log("Fetched products:", action.payload)
-
         state.loading = false
         state.products = action.payload
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false
         state.error = action.error.message || "Error fetching products"
+      })
+      .addCase(markProductOutOfStock.fulfilled, (state) => {
+        state.loading = false
+      })
+      .addCase(markProductInStock.fulfilled, (state) => {
+        state.loading = false
       })
   },
 })

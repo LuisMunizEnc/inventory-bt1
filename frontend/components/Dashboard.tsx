@@ -1,6 +1,7 @@
 "use client"
 
 import { ProductFilter } from "./ProductFilter"
+import { ProductTable } from "./ProductTable"
 
 export function Dashboard() {
   return (
@@ -12,6 +13,7 @@ export function Dashboard() {
         </div>
       </div>
       <ProductFilter />
+      <ProductTable />
     </div>
   )
 }
