@@ -14,6 +14,8 @@ import type { Product, Category } from "../types"
 import { productService } from "../services/productService"
 import { ProductModal } from "./modal/ProductModal"
 import { CategoryModal } from "./modal/CategoryModal"
+import { DeleteProductModal } from "./modal/DeleteProductModal"
+import { EditProductModal } from "./modal/EditProductModal"
 
 export function ProductTable() {
   const dispatch = useAppDispatch()
@@ -21,6 +23,11 @@ export function ProductTable() {
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null)
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
   useEffect(() => {
     dispatch(fetchProducts())
@@ -67,6 +74,16 @@ export function ProductTable() {
     } finally {
       setLoadingProductId(null)
     }
+  }
+
+  const handleEditProduct = (product: Product) => {
+    setSelectedProductId(product.id)
+    setIsEditModalOpen(true)
+  }
+
+  const handleDeleteProduct = (product: Product) => {
+    setSelectedProduct(product)
+    setIsDeleteModalOpen(true)
   }
 
   if (loading) {
@@ -193,10 +210,12 @@ export function ProductTable() {
                     <TableCell>{product.expirationDate ? formatDate(product.expirationDate) : "N/A"}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="sm" title="Edit Product">
+                        <Button variant="ghost" size="sm" title="Edit Product"
+                          onClick={() => handleEditProduct(product)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" title="Delete Product">
+                        <Button variant="ghost" size="sm" title="Delete Product"
+                          onClick={() => handleDeleteProduct(product)}>
                           <Trash className="h-4 w-4 text-red-500"/>
                         </Button>
                       </div>
@@ -226,6 +245,33 @@ export function ProductTable() {
           }}
         />
 
+        <EditProductModal
+          isOpen={isEditModalOpen}
+          productId={selectedProductId}
+          onClose={() => {
+            setIsEditModalOpen(false)
+            setSelectedProductId(null)
+          }}
+          onProductUpdated={() => {
+            setIsEditModalOpen(false)
+            setSelectedProductId(null)
+            dispatch(fetchProducts())
+          }}
+        />
+
+        <DeleteProductModal
+          isOpen={isDeleteModalOpen}
+          product={selectedProduct}
+          onClose={() => {
+            setIsDeleteModalOpen(false)
+            setSelectedProduct(null)
+          }}
+          onProductDeleted={() => {
+            setIsDeleteModalOpen(false)
+            setSelectedProduct(null)
+            dispatch(fetchProducts())
+          }}
+        />
       </CardContent>
     </Card>
   )

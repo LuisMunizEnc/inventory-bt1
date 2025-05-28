@@ -38,6 +38,10 @@ export const productService = {
     return response.data
   },
 
+  deleteProduct: async (id: string): Promise<void> => {
+    await api.delete(`/products/${id}`)
+  },
+
   markOutOfStock: async (id: string): Promise<void> => {
     await api.put(`/products/${id}/outofstock`)
   },

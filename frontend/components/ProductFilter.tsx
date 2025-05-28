@@ -128,7 +128,7 @@ export function ProductFilter() {
             {localFilters.categories && localFilters.categories.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {localFilters.categories.map((categoryName) => (
-                  <Badge key={categoryName} variant="secondary" className="text-xs">
+                  <Badge key={categoryName} className="text-xs">
                     {categoryName}
                     <button
                       onClick={() => removeCategoryFilter(categoryName)}
