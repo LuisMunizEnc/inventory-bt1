@@ -26,6 +26,10 @@ public class ProductRepository {
         return product;
     }
 
+    public boolean deleteById(String id) {
+        return products.remove(id) != null;
+    }
+
     public Optional<Product> findById(String id) {
         return Optional.ofNullable(products.get(id));
     }

@@ -13,6 +13,8 @@ public interface ProductService {
 
     Product getProductById(String productId);
 
+    void deleteProductById(String productId);
+
     List<Product> getAllProducts();
 
     List<Product> getProductsByCriteria(String name, List<String> categoryFilter, Boolean availability);

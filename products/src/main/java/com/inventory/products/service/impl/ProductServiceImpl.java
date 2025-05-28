@@ -97,6 +97,16 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(existingProduct);
     }
 
+    public void deleteProductById(String id) {
+        if (!hasText(id)) {
+            throw new IllegalArgumentException("Product ID cannot be null or empty for deletion");
+        }
+        boolean deleted = productRepository.deleteById(id);
+        if (!deleted) {
+            throw new EntityNotFoundException("Product not found with ID: " + id + " for deletion");
+        }
+    }
+
     public Product getProductById(String productId){
         if(!hasText(productId)) {
             throw new IllegalArgumentException("Product ID cannot be null or empty");

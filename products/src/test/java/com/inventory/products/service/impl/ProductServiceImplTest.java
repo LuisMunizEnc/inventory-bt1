@@ -362,6 +362,47 @@ public class ProductServiceImplTest {
         verify(productRepository, never()).save(any(Product.class));
     }
 
+    // --- Tests for deleteProductById ---
+
+    @Test
+    public void givenExistingProductId_whenDeleteProductById_thenProductIsDeleted() {
+        // given
+        String productId = UUID.randomUUID().toString();
+        when(productRepository.deleteById(productId)).thenReturn(true);
+
+        // when
+        productService.deleteProductById(productId);
+
+        // then
+        verify(productRepository).deleteById(productId);
+    }
+
+    @Test
+    public void givenNullProductId_whenDeleteProductById_thenThrowIllegalArgumentException() {
+        // given
+        String productId = null;
+
+        // when
+        // then
+        assertThatThrownBy(() -> productService.deleteProductById(productId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Product ID cannot be null or empty for deletion");
+        verifyNoInteractions(productRepository);
+    }
+
+    @Test
+    public void givenEmptyProductId_whenDeleteProductById_thenThrowIllegalArgumentException() {
+        // given
+        String productId = "";
+
+        // when
+        // then
+        assertThatThrownBy(() -> productService.deleteProductById(productId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Product ID cannot be null or empty for deletion");
+        verifyNoInteractions(productRepository);
+    }
+
     // --- Tests for getAllProducts ---
 
     @Test
