@@ -1,5 +1,5 @@
 export interface Category {
-    cagegoryName: string
+    categoryName: string
 }
 
 export interface ProductInfo {
