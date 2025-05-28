@@ -61,8 +61,8 @@ public class ProductRepository {
         return categoryFilter == null || categoryFilter.isEmpty() || categoryFilter.contains(product.getCategory().getCategoryName());
     }
 
-    private boolean isAvailabilityMatching(Product product, boolean availabilityFilter) {
-        return !availabilityFilter || product.getInStock() > 0;
+    private boolean isAvailabilityMatching(Product product, Boolean availabilityFilter) {
+        return availabilityFilter == null || availabilityFilter == product.getInStock() > 0;
     }
 
     public void updateAvailability(Product product, boolean setStock) {

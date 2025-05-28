@@ -440,7 +440,7 @@ public class ProductControllerTest {
         doNothing().when(productService).setProductOutOfStock(productId);
 
         // when
-        MockHttpServletResponse response = mockMvc.perform(MockMvcRequestBuilders.post("/products/{id}/outofstock", productId)
+        MockHttpServletResponse response = mockMvc.perform(MockMvcRequestBuilders.put("/products/{id}/outofstock", productId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent())
                 .andReturn().getResponse();
@@ -459,7 +459,7 @@ public class ProductControllerTest {
                 .when(productService).setProductOutOfStock(productId);
 
         // when
-        MockHttpServletResponse response = mockMvc.perform(MockMvcRequestBuilders.post("/products/{id}/outofstock", productId)
+        MockHttpServletResponse response = mockMvc.perform(MockMvcRequestBuilders.put("/products/{id}/outofstock", productId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andReturn().getResponse();
