@@ -44,6 +44,14 @@ public class ProductController {
         return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable String id) {
+        log.info("Received request to delete product with ID: {}", id);
+        productService.deleteProductById(id);
+        log.info("Product with ID: {} deleted successfully", id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable String id) {
         log.info("Received request to get product by ID: {}", id);

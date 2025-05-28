@@ -26,6 +26,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -275,6 +276,62 @@ public class ProductControllerTest {
         assertEquals(errorMessage, errorResponse.getMessage());
 
         verify(productService, times(1)).updateProduct(any(ProductInfo.class));
+    }
+
+    @Test
+    public void givenExistingProductId_whenDeleteProductById_thenReturnsNoContent() throws Exception {
+        // given
+        String productId = UUID.randomUUID().toString();
+        doNothing().when(productService).deleteProductById(productId);
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(MockMvcRequestBuilders.delete("/products/" + productId))
+                .andExpect(status().isNoContent())
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.NO_CONTENT.value());
+        verify(productService).deleteProductById(productId);
+    }
+
+    @Test
+    public void givenNonExistingProductId_whenDeleteProductById_thenReturnsNotFound() throws Exception {
+        // given
+        String nonExistentId = UUID.randomUUID().toString();
+        String errorMessage = "Product not found with ID: " + nonExistentId + " for deletion";
+        doThrow(new EntityNotFoundException(errorMessage)).when(productService).deleteProductById(nonExistentId);
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(MockMvcRequestBuilders.delete("/products/" + nonExistentId))
+                .andExpect(status().isNotFound())
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        ErrorResponse errorResponse = objectMapper.readValue(response.getContentAsString(), ErrorResponse.class);
+        assertNotNull(errorResponse);
+        assertEquals(errorMessage, errorResponse.getMessage());
+        verify(productService).deleteProductById(nonExistentId);
+    }
+
+    @Test
+    public void givenNullProductIdForDelete_whenDeleteProductById_thenReturnsBadRequest() throws Exception {
+        // given
+        String productId = " ";
+        String errorMessage = "Product ID cannot be null or empty for deletion";
+        doThrow(new IllegalArgumentException(errorMessage)).when(productService).deleteProductById(productId);
+
+        // when
+        MockHttpServletResponse response = mockMvc.perform(MockMvcRequestBuilders.delete("/products/" + productId))
+                .andExpect(status().isBadRequest())
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+        ErrorResponse errorResponse = objectMapper.readValue(response.getContentAsString(), ErrorResponse.class);
+        assertNotNull(errorResponse);
+        assertEquals(errorMessage, errorResponse.getMessage());
+        verify(productService).deleteProductById(productId);
     }
 
     @Test
