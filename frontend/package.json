@@ -1,9 +1,9 @@
 {
   "private": true,
   "scripts": {
-    "dev": "next",
-    "build": "next build",
-    "start": "next start"
+    "dev": "next -p 8080",
+    "build": "next build -p 8080",
+    "start": "next start -p 8080"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.2",
