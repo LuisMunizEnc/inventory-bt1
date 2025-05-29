@@ -26,9 +26,8 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        log.info("Cargando datos iniciales...");
+        log.info("Init Data...");
 
-        // Crear categorías
         createCategoryIfNotFound("Electronics");
         createCategoryIfNotFound("Food");
         createCategoryIfNotFound("Books");
@@ -38,7 +37,6 @@ public class DataLoader implements CommandLineRunner {
         createCategoryIfNotFound("Beauty");
         createCategoryIfNotFound("Toys");
 
-        // Crear 25 productos
         createProductIfNotFound("Laptop Pro", "Electronics", new BigDecimal("1500.00"), 10, null);
         createProductIfNotFound("Smartphone X", "Electronics", new BigDecimal("800.00"), 25, null);
         createProductIfNotFound("Wireless Headphones", "Electronics", new BigDecimal("150.00"), 40, null);
@@ -52,7 +50,7 @@ public class DataLoader implements CommandLineRunner {
         createProductIfNotFound("Coffee Beans", "Food", new BigDecimal("12.00"), 35, null);
 
         createProductIfNotFound("The Great Novel", "Books", new BigDecimal("25.00"), 30, null);
-        createProductIfNotFound("Science Textbook", "Books", new BigDecimal("70.00"), 15, null);
+        createProductIfNotFound("Science Textbook", "Books", new BigDecimal("70.00"), 8, null);
         createProductIfNotFound("Fantasy Series Vol. 1", "Books", new BigDecimal("18.00"), 20, null);
 
         createProductIfNotFound("Summer T-Shirt", "Clothing", new BigDecimal("15.99"), 20, null);
@@ -73,17 +71,17 @@ public class DataLoader implements CommandLineRunner {
 
         createProductIfNotFound("Expired Milk", "Food", new BigDecimal("1.00"), 0, LocalDate.now().minusDays(1)); // Producto fuera de stock y expirado
 
-        log.info("Datos iniciales cargados.");
+        log.info("Finished.");
     }
 
     private void createCategoryIfNotFound(String categoryName) {
         try {
             categoryService.createCategory(Category.builder().categoryName(categoryName).build());
-            log.info("Categoría '{}' creada.", categoryName);
+            log.info("Category '{}' created.", categoryName);
         } catch (EntityAlreadyExistsException e) {
-            log.warn("Categoría '{}' ya existe, omitiendo creación.", categoryName);
+            log.warn("Category '{}' already exists.", categoryName);
         } catch (IllegalArgumentException e) {
-            log.error("Error al crear categoría '{}': {}", categoryName, e.getMessage());
+            log.error("Error with '{}': {}", categoryName, e.getMessage());
         }
     }
 
@@ -97,11 +95,11 @@ public class DataLoader implements CommandLineRunner {
 
         try {
             productService.createProduct(productInfo);
-            log.info("Producto '{}' creado.", name);
+            log.info("Product '{}' created.", name);
         } catch (EntityAlreadyExistsException e) {
-            log.warn("Producto '{}' ya existe, omitiendo creación.", name);
-        } catch (Exception e) { // Captura cualquier otra excepción de validación o no encontrada
-            log.error("Error al crear producto '{}': {}", name, e.getMessage());
+            log.warn("Product '{}' already exists.", name);
+        } catch (Exception e) {
+            log.error("Error with '{}': {}", name, e.getMessage());
         }
     }
 }
