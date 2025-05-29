@@ -109,6 +109,27 @@ export function ProductTable() {
     </TableHead>
   )
 
+  const getRowBackgroundColor = (expirationDate?: string) => {
+    if (!expirationDate) return ""
+
+    const today = new Date()
+    const expDate = new Date(expirationDate)
+    const diffTime = expDate.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+    if (diffDays < 7) {
+      return "bg-red-100 hover:bg-red-200"
+    } else if (diffDays >= 7 && diffDays <= 14) {
+      return "bg-yellow-100 hover:bg-yellow-200"
+    } else {
+      return "bg-green-100 hover:bg-green-200"
+    }
+  }
+
+  const getTextStyle = (inStock: number) => {
+    return inStock === 0 ? "line-through text-gray-500" : ""
+  }
+
   const handleToggleStock = async (product: Product) => {
     try {
       setLoadingProductId(product.id)
@@ -252,7 +273,7 @@ export function ProductTable() {
               </TableHeader>
               <TableBody>
                 {currentData.map((product: Product) => (
-                  <TableRow key={product.id}>
+                  <TableRow key={product.id} className={getRowBackgroundColor(product.expirationDate)}>
                     <TableCell>
                       <Button
                         variant={product.inStock > 0 ? "destructive" : "default"}
@@ -291,13 +312,15 @@ export function ProductTable() {
                         )}
                       </Button>
                     </TableCell>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>
+                    <TableCell className={`font-medium ${getTextStyle(product.inStock)}`}>{product.name}</TableCell>
+                    <TableCell className={getTextStyle(product.inStock)}>
                       <Badge variant="outline">{product.category.categoryName}</Badge>
                     </TableCell>
-                    <TableCell>{formatCurrency(product.unitPrice)}</TableCell>
+                    <TableCell className={getTextStyle(product.inStock)}>{formatCurrency(product.unitPrice)}</TableCell>
                     <TableCell>{getStockStatus(product.inStock)}</TableCell>
-                    <TableCell>{product.expirationDate ? formatDate(product.expirationDate) : "N/A"}</TableCell>
+                    <TableCell className={getTextStyle(product.inStock)}>
+                      {product.expirationDate ? formatDate(product.expirationDate) : "N/A"}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button variant="ghost" size="sm" title="Edit Product"
