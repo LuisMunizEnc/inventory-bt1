@@ -1,5 +1,5 @@
 import { api } from "./api"
-import type { Product, ProductInfo, ProductFilters } from "../types"
+import type { Product, ProductInfo, ProductFilters, InventoryMetrics } from "../types"
 
 export const productService = {
   getAllProducts: async (filters?: ProductFilters): Promise<Product[]> => {
@@ -48,5 +48,10 @@ export const productService = {
 
   markInStock: async (id: string): Promise<void> => {
     await api.put(`/products/${id}/instock`)
+  },
+
+  getMetrics: async (): Promise<InventoryMetrics> => {
+    const response = await api.get("/products/metrics")
+    return response.data
   },
 }

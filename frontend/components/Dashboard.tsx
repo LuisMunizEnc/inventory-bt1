@@ -1,5 +1,6 @@
 "use client"
 
+import { InventoryMetrics } from "./InventoryMetrics"
 import { ProductFilter } from "./ProductFilter"
 import { ProductTable } from "./ProductTable"
 
@@ -14,6 +15,7 @@ export function Dashboard() {
       </div>
       <ProductFilter />
       <ProductTable />
+      <InventoryMetrics />
     </div>
   )
 }
