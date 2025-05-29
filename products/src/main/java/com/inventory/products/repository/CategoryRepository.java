@@ -3,10 +3,7 @@ package com.inventory.products.repository;
 import com.inventory.products.model.Category;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import static org.springframework.util.StringUtils.hasText;
 
@@ -26,11 +23,11 @@ public class CategoryRepository {
                 .collect(Collectors.toList());
     }
 
-    public Category findByName(String categoryName) {
+    public Optional<Category> findByName(String categoryName) {
         if (!hasText(categoryName)) {
-            return null;
+            return Optional.empty();
         }
-        return categories.get(categoryName);
+        return Optional.ofNullable(categories.get(categoryName));
     }
 
     public boolean existsByName(String categoryName) {

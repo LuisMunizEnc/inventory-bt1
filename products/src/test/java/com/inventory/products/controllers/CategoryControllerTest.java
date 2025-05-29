@@ -38,9 +38,6 @@ public class CategoryControllerTest {
     @MockBean
     private CategoryServiceImpl categoryService;
 
-    @InjectMocks
-    private CategoryController categoryController;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach

@@ -5,12 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class ErrorResponse {
-
-    private String message;
-
+public class OverallMetrics {
+    private int totalProductsInStock;
+    private BigDecimal totalValueInStock;
+    private BigDecimal averagePriceInStock;
 }

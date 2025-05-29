@@ -13,6 +13,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/categories")
+@CrossOrigin
 public class CategoryController {
     private final CategoryService categoryService;
 
