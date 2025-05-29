@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.*;
 
 import static org.springframework.util.StringUtils.hasText;
@@ -166,12 +166,12 @@ public class ProductServiceImpl implements ProductService {
         }
 
         BigDecimal averagePriceOfInStockProducts = totalProductsInStock == 0 ? BigDecimal.ZERO :
-                sumOfUnitPrices.divide(BigDecimal.valueOf(totalProductsInStock), MathContext.DECIMAL64);
+                sumOfUnitPrices.divide(BigDecimal.valueOf(totalProductsInStock), 2, RoundingMode.HALF_UP);
         Map<String, BigDecimal> averagePriceOfInStockProductsByCategory = new HashMap<>();
         countByCategory.forEach((category, count) -> {
             averagePriceOfInStockProductsByCategory.put
                     (category, sumOfUnitPricesByCategory.get(category).divide(BigDecimal.valueOf(count),
-                            MathContext.DECIMAL64));
+                            2, RoundingMode.HALF_UP));
         });
 
         return new InventoryMetrics(
