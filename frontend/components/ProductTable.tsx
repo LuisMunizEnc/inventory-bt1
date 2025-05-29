@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Package, Edit, Plus, Trash, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
+import { Package, Edit, Plus, Trash, ArrowUpDown, ArrowUp, ArrowDown,
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight
+ } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "../hooks/redux"
 import { fetchProducts } from "../store/slices/productsSlice"
 import { fetchCategories } from "../store/slices/categoriesSlice"
@@ -18,11 +20,14 @@ import { DeleteProductModal } from "./modal/DeleteProductModal"
 import { EditProductModal } from "./modal/EditProductModal"
 import { useSorting } from "../hooks/useSorting"
 
+const ITEMS_PER_PAGE = 10
+
 export function ProductTable() {
   const dispatch = useAppDispatch()
   const { products, loading, error } = useAppSelector((state) => state.products)
   const [loadingProductId, setLoadingProductId] = useState<string | null>(null)
   const { sortedData, sortConfig, handleSort, clearSort } = useSorting(products)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
@@ -31,6 +36,16 @@ export function ProductTable() {
 
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+
+  // Pagination
+  const totalPages = Math.ceil(sortedData.length / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const currentData = sortedData.slice(startIndex, endIndex)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [products.length])
 
   useEffect(() => {
     dispatch(fetchProducts())
@@ -122,6 +137,45 @@ export function ProductTable() {
     setIsDeleteModalOpen(true)
   }
 
+  const goToPage = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const goToFirstPage = () => {
+    setCurrentPage(1)
+  }
+
+  const goToLastPage = () => {
+    setCurrentPage(totalPages)
+  }
+
+  const goToPreviousPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1))
+  }
+
+  const goToNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+  }
+
+  const getPageNumbers = () => {
+    const pageNumbers = []
+    const maxPagesToShow = 5
+
+    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2))
+    let endPage = startPage + maxPagesToShow - 1
+
+    if (endPage > totalPages) {
+      endPage = totalPages
+      startPage = Math.max(1, endPage - maxPagesToShow + 1)
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i)
+    }
+
+    return pageNumbers
+  }
+
   if (loading) {
     return (
       <Card>
@@ -197,7 +251,7 @@ export function ProductTable() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedData.map((product: Product) => (
+                {currentData.map((product: Product) => (
                   <TableRow key={product.id}>
                     <TableCell>
                       <Button
@@ -309,6 +363,56 @@ export function ProductTable() {
           }}
         />
       </CardContent>
+
+      {sortedData.length > 0 && (
+        <CardFooter className="flex justify-between items-center border-t px-6 py-4">
+          <div className="text-sm text-gray-500">
+            Showing {startIndex + 1}-{Math.min(endIndex, sortedData.length)} of {sortedData.length} products
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToFirstPage}
+              disabled={currentPage === 1}
+              className="hidden sm:flex"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={goToPreviousPage} disabled={currentPage === 1}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            <div className="flex items-center">
+              {getPageNumbers().map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => goToPage(page)}
+                  className="w-9"
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+
+            <Button variant="outline" size="sm" onClick={goToNextPage} disabled={currentPage === totalPages}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToLastPage}
+              disabled={currentPage === totalPages}
+              className="hidden sm:flex"
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardFooter>
+      )}
     </Card>
   )
 }
