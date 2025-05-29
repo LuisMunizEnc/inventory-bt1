@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
@@ -132,7 +133,7 @@ public class CategoryServiceImplTest {
         // given
         String categoryName = "Electronics";
         Category expectedCategory = Category.builder().categoryName(categoryName).build();
-        when(categoryRepository.findByName(categoryName)).thenReturn(expectedCategory);
+        when(categoryRepository.findByName(categoryName)).thenReturn(Optional.ofNullable(expectedCategory));
 
         // when
         Category actualCategory = categoryService.getCategoryByName(categoryName);
@@ -147,7 +148,7 @@ public class CategoryServiceImplTest {
     void testGetCategoryByName_CategoryDoesNotExist() {
         // given
         String categoryName = "NonExistent";
-        when(categoryRepository.findByName(categoryName)).thenReturn(null);
+        when(categoryRepository.findByName(categoryName)).thenReturn(Optional.empty());
 
         // when
         // then

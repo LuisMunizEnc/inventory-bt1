@@ -5,12 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class ErrorResponse {
-
-    private String message;
-
+public class InventoryMetricsReport {
+    private List<CategoryMetrics> categoryMetrics;
+    private OverallMetrics overallMetrics;
 }

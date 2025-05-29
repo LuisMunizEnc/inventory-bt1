@@ -1,0 +1,6 @@
+spring:
+    application:
+        name: products
+
+server:
+    port: 9090

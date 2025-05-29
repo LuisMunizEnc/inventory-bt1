@@ -1,4 +1,4 @@
-package com.inventory.products.model;
+package com.inventory.products.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,16 +9,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
-@Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class Product {
+@NoArgsConstructor
+@Builder
+public class ProductInfo {
     private String id;
     private String name;
-    private Category category;
+    private String categoryName;
     private BigDecimal unitPrice;
     private LocalDate expirationDate;
     private int inStock;
-    private LocalDate createdAt;
-    private LocalDate updatedAt;
 }
