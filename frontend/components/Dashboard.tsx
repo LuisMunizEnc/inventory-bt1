@@ -1,5 +1,8 @@
 "use client"
 
+import { ProductFilter } from "./ProductFilter"
+import { ProductTable } from "./ProductTable"
+
 export function Dashboard() {
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -9,6 +12,8 @@ export function Dashboard() {
           <p className="text-muted-foreground">Manage your Inventory and obtain metrics</p>
         </div>
       </div>
+      <ProductFilter />
+      <ProductTable />
     </div>
   )
 }
