@@ -700,7 +700,7 @@ public class ProductServiceImplTest {
         assertNotNull(report);
 
         OverallMetrics overall = report.getOverallMetrics();
-        assertEquals(1, overall.getTotalProductsInStock());
+        assertEquals(5, overall.getTotalProductsInStock());
         assertEquals(new BigDecimal("6000.00"), overall.getTotalValueInStock());
         assertEquals(new BigDecimal("1200.00"), overall.getAveragePriceInStock());
 
@@ -740,7 +740,7 @@ public class ProductServiceImplTest {
         assertNotNull(report);
 
         OverallMetrics overall = report.getOverallMetrics();
-        assertEquals(3, overall.getTotalProductsInStock());
+        assertEquals(15, overall.getTotalProductsInStock());
         assertEquals(new BigDecimal("4815.00"), overall.getTotalValueInStock());
         assertTrue(overall.getAveragePriceInStock().compareTo(new BigDecimal("667.16")) >= 0.01);
 

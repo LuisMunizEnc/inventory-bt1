@@ -116,7 +116,7 @@ export function InventoryMetrics() {
               <div className="flex items-center gap-2">
                 <Package className="h-4 w-4 text-blue-600" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Products</p>
+                  <p className="text-sm font-medium text-gray-600">Total Products in Stock</p>
                   <p className="text-2xl font-bold">{formatNumber(metrics.overallMetrics.totalProductsInStock)}</p>
                 </div>
               </div>
@@ -127,7 +127,7 @@ export function InventoryMetrics() {
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-green-600" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Value</p>
+                  <p className="text-sm font-medium text-gray-600">Total Value in Stock</p>
                   <p className="text-2xl font-bold">{formatCurrency(metrics.overallMetrics.totalValueInStock)}</p>
                 </div>
               </div>
@@ -138,7 +138,7 @@ export function InventoryMetrics() {
               <div className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-purple-600" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Average Price</p>
+                  <p className="text-sm font-medium text-gray-600">Average Price in Stock </p>
                   <p className="text-2xl font-bold">{formatCurrency(metrics.overallMetrics.averagePriceInStock)}</p>
                 </div>
               </div>
