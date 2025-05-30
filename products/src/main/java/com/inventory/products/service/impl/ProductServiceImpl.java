@@ -146,6 +146,7 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
 
         int totalProductsInStock = inStockProducts.size();
+        int totalUnitsInStock = 0;
         BigDecimal totalValueOfInventory = BigDecimal.ZERO;
         BigDecimal sumOfUnitPrices = BigDecimal.ZERO;
         Map<String, Integer> productsInStockByCategory = new HashMap<>();
@@ -157,6 +158,7 @@ public class ProductServiceImpl implements ProductService {
             BigDecimal productValue = product.getUnitPrice().multiply(BigDecimal.valueOf(product.getInStock()));
             totalValueOfInventory = totalValueOfInventory.add(productValue);
             sumOfUnitPrices = sumOfUnitPrices.add(product.getUnitPrice());
+            totalUnitsInStock += product.getInStock();
 
             String categoryName = product.getCategory().getCategoryName();
             productsInStockByCategory.merge(categoryName, product.getInStock(), Integer::sum);
@@ -175,7 +177,7 @@ public class ProductServiceImpl implements ProductService {
         });
 
         return new InventoryMetrics(
-                totalProductsInStock,
+                totalUnitsInStock,
                 totalValueOfInventory,
                 averagePriceOfInStockProducts,
                 productsInStockByCategory,
