@@ -1,10 +1,13 @@
-import type { Metadata } from "next";
-import { Counter } from "./components/counter/Counter";
+"use client"
 
-export default function IndexPage() {
-  return <Counter />;
+import { Provider } from "react-redux"
+import { store } from "../store"
+import { Dashboard } from "../components/Dashboard"
+
+export default function Home() {
+  return (
+    <Provider store={store}>
+      <Dashboard />
+    </Provider>
+  )
 }
-
-export const metadata: Metadata = {
-  title: "Redux Toolkit",
-};
