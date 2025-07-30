@@ -8,10 +8,12 @@ import com.inventory.products.model.Product;
 import com.inventory.products.repository.ProductRepository;
 import com.inventory.products.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.*;
 
 import static org.springframework.util.StringUtils.hasText;
@@ -29,6 +31,13 @@ public class ProductServiceImpl implements ProductService {
         this.productRepository = productRepository;
         this.categoryService = categoryService;
     }
+
+    void updateAvailability(Product product, boolean setStock) {
+        product.setInStock(setStock ? 10 : 0);
+        product.setUpdatedAt(LocalDate.now());
+        productRepository.save(product);
+    }
+
 
     private void validateProductInfo(ProductInfo productInfo) {
         if (productInfo == null) {
@@ -57,6 +66,7 @@ public class ProductServiceImpl implements ProductService {
         }
 
         Product product = Product.builder()
+                .id(UUID.randomUUID().toString())
                 .name(productInfo.getName())
                 .category(category)
                 .unitPrice(productInfo.getUnitPrice())
@@ -101,8 +111,9 @@ public class ProductServiceImpl implements ProductService {
         if (!hasText(id)) {
             throw new IllegalArgumentException("Product ID cannot be null or empty for deletion");
         }
-        boolean deleted = productRepository.deleteById(id);
-        if (!deleted) {
+        try{
+            productRepository.deleteById(id);
+        }catch (EmptyResultDataAccessException e){
             throw new EntityNotFoundException("Product not found with ID: " + id + " for deletion");
         }
     }
@@ -126,14 +137,12 @@ public class ProductServiceImpl implements ProductService {
 
     public void setProductInStock(String productId){
         Optional<Product> productFound = productRepository.findById(productId);
-        productFound.ifPresent(product -> productRepository.updateAvailability
-                (product, true));
+        productFound.ifPresent(product -> updateAvailability(product, true));
     }
 
     public void setProductOutOfStock(String productId){
         Optional<Product> productFound = productRepository.findById(productId);
-        productFound.ifPresent(product -> productRepository.updateAvailability
-                (product, false));
+        productFound.ifPresent(product -> updateAvailability(product, false));
     }
 
     private boolean isInStock(Product product){

@@ -368,7 +368,6 @@ public class ProductServiceImplTest {
     public void givenExistingProductId_whenDeleteProductById_thenProductIsDeleted() {
         // given
         String productId = UUID.randomUUID().toString();
-        when(productRepository.deleteById(productId)).thenReturn(true);
 
         // when
         productService.deleteProductById(productId);
@@ -585,7 +584,7 @@ public class ProductServiceImplTest {
 
         // then
         verify(productRepository).findById(productId);
-        verify(productRepository).updateAvailability(product, true);
+        verify(productRepository).save(argThat(p -> p.getInStock() == 10));
     }
 
     @Test
@@ -619,7 +618,7 @@ public class ProductServiceImplTest {
         productService.setProductOutOfStock(productId);
         // then
         verify(productRepository).findById(productId);
-        verify(productRepository).updateAvailability(product, false);
+        verify(productRepository).save(argThat(p -> p.getInStock() == 0));
     }
 
     @Test
@@ -638,7 +637,7 @@ public class ProductServiceImplTest {
 
         // then
         verify(productRepository).findById(productId);
-        verify(productRepository).updateAvailability(product, false);
+        verify(productRepository).save(argThat(p -> p.getInStock() == 0));
         assertEquals(0, product.getInStock());
     }
 
