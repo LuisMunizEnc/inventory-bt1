@@ -216,7 +216,7 @@ This controller provides endpoints for managing product categories.
 
 ### 3. Get Category by Name (`GET /categories/{name}`)
 
-* **Description:** Retrieves a specific category based on its name.
+* **Description:** Retrieves a specific category based on the name.
 * **Path Variable:**
     * `name` (string, required): The name of the category to retrieve.
 * **Response:**
