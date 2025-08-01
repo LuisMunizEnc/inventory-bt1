@@ -137,12 +137,20 @@ public class ProductServiceImpl implements ProductService {
 
     public void setProductInStock(String productId){
         Optional<Product> productFound = productRepository.findById(productId);
-        productFound.ifPresent(product -> updateAvailability(product, true));
+        if(productFound.isPresent()){
+            updateAvailability(productFound.get(), true);
+        }else{
+            throw new EntityNotFoundException("Product not found with ID: " + productId);
+        }
     }
 
     public void setProductOutOfStock(String productId){
         Optional<Product> productFound = productRepository.findById(productId);
-        productFound.ifPresent(product -> updateAvailability(product, false));
+        if(productFound.isPresent()){
+            updateAvailability(productFound.get(), false);
+        }else{
+            throw new EntityNotFoundException("Product not found with ID: " + productId);
+        }
     }
 
     private boolean isInStock(Product product){
