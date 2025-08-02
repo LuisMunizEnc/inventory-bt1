@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Package, Edit, Plus, Trash, ArrowUpDown, ArrowUp, ArrowDown,
+import {
+  Package, Edit, Plus, Trash, ArrowUpDown, ArrowUp, ArrowDown,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight
- } from "lucide-react"
+} from "lucide-react"
 import { useAppDispatch, useAppSelector } from "../hooks/redux"
 import { fetchProducts } from "../store/slices/productsSlice"
 import { fetchCategories } from "../store/slices/categoriesSlice"
@@ -235,18 +236,18 @@ export function ProductTable() {
 
   return (
     <Card>
-      <CardHeader> 
+      <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Products ({sortedData.length})</span>
           <div className="gap-2 flex items-center">
             <Button variant="outline" onClick={() => setIsCategoryModalOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Category
+              <Plus className="h-4 w-4 mr-2" />
+              New Category
             </Button>
             <Button onClick={() => setIsProductModalOpen(true)}>
-                <Package className="h-4 w-4 mr-2"/>
-                New Product
-          </Button>
+              <Package className="h-4 w-4 mr-2" />
+              New Product
+            </Button>
           </div>
         </CardTitle>
       </CardHeader>
@@ -262,7 +263,7 @@ export function ProductTable() {
             <Table>
               <TableHeader>
                 <TableRow>
-                <TableHead>Stock Action</TableHead>
+                  <TableHead>Stock Action</TableHead>
                   <SortableHeader field="name">Name</SortableHeader>
                   <SortableHeader field="category">Category</SortableHeader>
                   <SortableHeader field="unitPrice">Unit Price</SortableHeader>
@@ -329,7 +330,7 @@ export function ProductTable() {
                         </Button>
                         <Button variant="ghost" size="sm" title="Delete Product"
                           onClick={() => handleDeleteProduct(product)}>
-                          <Trash className="h-4 w-4 text-red-500"/>
+                          <Trash className="h-4 w-4 text-red-500" />
                         </Button>
                       </div>
                     </TableCell>

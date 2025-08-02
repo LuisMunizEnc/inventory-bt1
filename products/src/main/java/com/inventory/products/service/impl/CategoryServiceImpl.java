@@ -33,7 +33,7 @@ public class CategoryServiceImpl implements CategoryService {
             throw new EntityInvalidArguments("Category name can't be null or empty");
         }
         category.setCategoryName(category.getCategoryName().trim());
-        if (categoryRepository.existsByName(category.getCategoryName())) {
+        if (categoryRepository.existsByCategoryName(category.getCategoryName())) {
             throw new EntityAlreadyExistsException("Category already exist: " + category.getCategoryName());
         }
         return categoryRepository.save(category);
@@ -46,7 +46,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Category getCategoryByName(String categoryName){
-        Optional<Category> foundCategory =  categoryRepository.findByName(categoryName);
+        Optional<Category> foundCategory =  categoryRepository.findByCategoryName(categoryName);
         return foundCategory.orElseThrow(() -> new EntityNotFoundException("Category with name " + categoryName + " doesn't exist"));
     }
 }

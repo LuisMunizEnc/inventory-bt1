@@ -32,7 +32,7 @@ public class CategoryServiceImplTest {
     public void givenCategory_whenCategoryIsCreated_thenCreateCategory(){
         // given
         Category categoryToCreate = Category.builder().categoryName("TestCategory").build();
-        when(categoryRepository.existsByName(categoryToCreate.getCategoryName())).thenReturn(false);
+        when(categoryRepository.existsByCategoryName(categoryToCreate.getCategoryName())).thenReturn(false);
         when(categoryRepository.save(categoryToCreate)).thenReturn(categoryToCreate);
 
         // when
@@ -87,7 +87,7 @@ public class CategoryServiceImplTest {
                 .categoryName("Food")
                 .build();
 
-        when(categoryRepository.existsByName("Food")).thenReturn(true);
+        when(categoryRepository.existsByCategoryName("Food")).thenReturn(true);
 
         // when
         // then
@@ -133,7 +133,7 @@ public class CategoryServiceImplTest {
         // given
         String categoryName = "Electronics";
         Category expectedCategory = Category.builder().categoryName(categoryName).build();
-        when(categoryRepository.findByName(categoryName)).thenReturn(Optional.ofNullable(expectedCategory));
+        when(categoryRepository.findByCategoryName(categoryName)).thenReturn(Optional.ofNullable(expectedCategory));
 
         // when
         Category actualCategory = categoryService.getCategoryByName(categoryName);
@@ -141,14 +141,14 @@ public class CategoryServiceImplTest {
         // then
         assertNotNull(actualCategory);
         assertEquals(categoryName, actualCategory.getCategoryName());
-        verify(categoryRepository, times(1)).findByName(categoryName);
+        verify(categoryRepository, times(1)).findByCategoryName(categoryName);
     }
 
     @Test
     void testGetCategoryByName_CategoryDoesNotExist() {
         // given
         String categoryName = "NonExistent";
-        when(categoryRepository.findByName(categoryName)).thenReturn(Optional.empty());
+        when(categoryRepository.findByCategoryName(categoryName)).thenReturn(Optional.empty());
 
         // when
         // then
