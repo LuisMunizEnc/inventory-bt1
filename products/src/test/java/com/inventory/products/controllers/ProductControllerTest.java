@@ -14,10 +14,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -41,7 +41,7 @@ public class ProductControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private ProductService productService;
 
     private ObjectMapper objectMapper;
@@ -50,7 +50,6 @@ public class ProductControllerTest {
     private Product product2;
     private ProductInfo productInfo1;
     private Category categoryFood;
-    private Category categoryDrink;
 
     @BeforeEach
     void setUp() {
@@ -59,7 +58,7 @@ public class ProductControllerTest {
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         categoryFood = Category.builder().categoryName("Food").build();
-        categoryDrink = Category.builder().categoryName("Drink").build();
+        Category categoryDrink = Category.builder().categoryName("Drink").build();
 
         product1 = Product.builder()
                 .id("prod1")
@@ -125,7 +124,7 @@ public class ProductControllerTest {
         // given
         ProductInfo invalidProductInfo = ProductInfo.builder()
                 .id("prodInvalid")
-                .name("") // Invalid name
+                .name("")
                 .categoryName("Food")
                 .unitPrice(new BigDecimal("1.00"))
                 .expirationDate(LocalDate.of(2025, 1, 1))
@@ -393,7 +392,7 @@ public class ProductControllerTest {
 
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        List<Product> responseList = objectMapper.readValue(response.getContentAsString(), new TypeReference<List<Product>>(){});
+        List<Product> responseList = objectMapper.readValue(response.getContentAsString(), new TypeReference<>(){});
         assertNotNull(responseList);
         assertEquals(2, responseList.size());
         assertEquals(product1.getId(), responseList.get(0).getId());
@@ -424,7 +423,8 @@ public class ProductControllerTest {
 
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        List<Product> responseList = objectMapper.readValue(response.getContentAsString(), new TypeReference<List<Product>>(){});
+        List<Product> responseList = objectMapper.readValue(response.getContentAsString(), new TypeReference<>() {
+        });
         assertNotNull(responseList);
         assertEquals(1, responseList.size());
         assertEquals(product1.getId(), responseList.getFirst().getId());
