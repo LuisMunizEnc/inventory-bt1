@@ -1,73 +1,22 @@
 package com.inventory.products.repository;
 
 import com.inventory.products.model.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.springframework.util.StringUtils.hasText;
 
 @Repository
-public class ProductRepository {
+public interface ProductRepository extends JpaRepository<Product, String> {
+    Boolean existsByName(String name);
 
-    private final Map<String, Product> products = new HashMap<>();
-
-    public Product save(Product product) {
-        String id = product.getId() == null ? UUID.randomUUID().toString() : product.getId();
-        product.setId(id);
-        if (!products.containsKey(id)) {
-            product.setCreatedAt(LocalDate.now());
-        } else {
-            product.setUpdatedAt(LocalDate.now());
-        }
-        products.put(id, product);
-        return product;
-    }
-
-    public boolean deleteById(String id) {
-        return products.remove(id) != null;
-    }
-
-    public Optional<Product> findById(String id) {
-        return Optional.ofNullable(products.get(id));
-    }
-
-    public List<Product> findAll() {
-        return products.values().stream()
-                .sorted(Comparator.comparing(Product::getName))
-                .collect(Collectors.toList());
-    }
-
-    public boolean existsByName(String name) {
-        return products.values().stream()
-                .anyMatch(p -> p.getName().equalsIgnoreCase(name));
-    }
-
-    public List<Product> findByCriteria(String nameFilter, List<String> categoryFilter, Boolean availabilityFilter) {
-        return products.values().stream()
-                .filter(product -> isNameMatching(product, nameFilter))
-                .filter(product -> isCategoryMatching(product, categoryFilter))
-                .filter(product -> isAvailabilityMatching(product, availabilityFilter))
-                .collect(Collectors.toList());
-    }
-
-    private boolean isNameMatching(Product product, String nameFilter) {
-        return !hasText(nameFilter) || product.getName().toLowerCase().contains(nameFilter.toLowerCase());
-    }
-
-    private boolean isCategoryMatching(Product product, List<String> categoryFilter) {
-        return categoryFilter == null || categoryFilter.isEmpty() || categoryFilter.contains(product.getCategory().getCategoryName());
-    }
-
-    private boolean isAvailabilityMatching(Product product, Boolean availabilityFilter) {
-        return availabilityFilter == null || availabilityFilter == product.getInStock() > 0;
-    }
-
-    public void updateAvailability(Product product, boolean setStock) {
-        product.setInStock(setStock ? 10 : 0);
-        product.setUpdatedAt(LocalDate.now());
-        products.put(product.getId(), product);
-    }
+    @Query("SELECT p FROM Product p WHERE " +
+            "(:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
+            "(:categoryNames IS NULL OR p.category.categoryName IN :categoryNames) AND " +
+            "(:available IS NULL OR (:available = true AND p.inStock > 0) OR (:available = false AND p.inStock = 0))")
+    List<Product> findByCriteria(@Param("name") String name,
+                                 @Param("categoryNames") List<String> categoryNames,
+                                 @Param("available") Boolean available);
 }

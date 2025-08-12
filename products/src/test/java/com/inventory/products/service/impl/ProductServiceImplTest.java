@@ -368,7 +368,6 @@ public class ProductServiceImplTest {
     public void givenExistingProductId_whenDeleteProductById_thenProductIsDeleted() {
         // given
         String productId = UUID.randomUUID().toString();
-        when(productRepository.deleteById(productId)).thenReturn(true);
 
         // when
         productService.deleteProductById(productId);
@@ -585,21 +584,21 @@ public class ProductServiceImplTest {
 
         // then
         verify(productRepository).findById(productId);
-        verify(productRepository).updateAvailability(product, true);
+        verify(productRepository).save(argThat(p -> p.getInStock() == 10));
     }
 
     @Test
-    public void givenNonExistingProductId_whenSetProductInStock_thenNoActionTaken() {
+    public void givenNonExistingProductId_whenSetProductInStock_thenThrowEntityNotFoundException() {
         // given
         String nonExistentId = UUID.randomUUID().toString();
         when(productRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
         // when
-        productService.setProductInStock(nonExistentId);
-
         // then
+        assertThatThrownBy(() -> productService.setProductInStock(nonExistentId))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("Product not found with ID: " + nonExistentId);
         verify(productRepository).findById(nonExistentId);
-        verifyNoMoreInteractions(productRepository);
     }
 
     // --- Tests for setProductOutOfStock ---
@@ -619,7 +618,7 @@ public class ProductServiceImplTest {
         productService.setProductOutOfStock(productId);
         // then
         verify(productRepository).findById(productId);
-        verify(productRepository).updateAvailability(product, false);
+        verify(productRepository).save(argThat(p -> p.getInStock() == 0));
     }
 
     @Test
@@ -638,22 +637,22 @@ public class ProductServiceImplTest {
 
         // then
         verify(productRepository).findById(productId);
-        verify(productRepository).updateAvailability(product, false);
+        verify(productRepository).save(argThat(p -> p.getInStock() == 0));
         assertEquals(0, product.getInStock());
     }
 
     @Test
-    public void givenNonExistingProductId_whenSetProductOutOfStock_thenNoActionTaken() {
+    public void givenNonExistingProductId_whenSetProductOutOfStock_thenThrowEntityNotFoundException() {
         // given
         String nonExistentId = UUID.randomUUID().toString();
         when(productRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
         // when
-        productService.setProductOutOfStock(nonExistentId);
-
         // then
+        assertThatThrownBy(() -> productService.setProductOutOfStock(nonExistentId))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("Product not found with ID: "+ nonExistentId);
         verify(productRepository).findById(nonExistentId);
-        verifyNoMoreInteractions(productRepository);
     }
 
     // --- Tests for getInventoryReport ---
