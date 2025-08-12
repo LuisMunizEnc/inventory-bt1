@@ -307,9 +307,9 @@ export function ProductTable() {
                             Loading
                           </span>
                         ) : product.inStock > 0 ? (
-                          "Set Out of Stock"
+                          "Empty stock"
                         ) : (
-                          "Set In Stock"
+                          "Fill stock"
                         )}
                       </Button>
                     </TableCell>
