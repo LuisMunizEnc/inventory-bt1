@@ -6,16 +6,13 @@ import com.inventory.products.exception.EntityAlreadyExistsException;
 import com.inventory.products.exception.EntityNotFoundException;
 import com.inventory.products.model.Category;
 import com.inventory.products.service.impl.CategoryServiceImpl;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -35,15 +32,10 @@ public class CategoryControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private CategoryServiceImpl categoryService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
 
     @Test
     public void givenCategory_whenCreateCategory_thenReturnsCreatedCategory() throws Exception {
@@ -80,7 +72,11 @@ public class CategoryControllerTest {
 
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        List<Category> responseList = objectMapper.readValue(response.getContentAsString(), List.class);
+        List<Category> responseList = objectMapper.readValue(
+                response.getContentAsString(),
+                new com.fasterxml.jackson.core.type.TypeReference<>() {
+                }
+        );
         assertNotNull(responseList);
         assertEquals(0, responseList.size());
         verify(categoryService).getAllCategories();
@@ -101,11 +97,16 @@ public class CategoryControllerTest {
 
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        List<Category> responseList = objectMapper.readValue(response.getContentAsString(), List.class);
+        List<Category> responseList = objectMapper.readValue(
+                response.getContentAsString(),
+                new com.fasterxml.jackson.core.type.TypeReference<>() {
+                }
+        );
         assertNotNull(responseList);
         assertEquals(2, responseList.size());
         List<Category> actualCategories = objectMapper.readValue(response.getContentAsString(),
-                new com.fasterxml.jackson.core.type.TypeReference<List<Category>>(){});
+                new com.fasterxml.jackson.core.type.TypeReference<>() {
+                });
         assertEquals("Electronics", actualCategories.get(0).getCategoryName());
         assertEquals("Food", actualCategories.get(1).getCategoryName());
         verify(categoryService).getAllCategories();
