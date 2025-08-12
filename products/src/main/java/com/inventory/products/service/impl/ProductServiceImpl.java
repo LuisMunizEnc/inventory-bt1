@@ -38,7 +38,6 @@ public class ProductServiceImpl implements ProductService {
         productRepository.save(product);
     }
 
-
     private void validateProductInfo(ProductInfo productInfo) {
         if (productInfo == null) {
             throw new IllegalArgumentException("Product information cannot be null");
@@ -57,6 +56,7 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    @Override
     public Product createProduct(ProductInfo productInfo) {
         validateProductInfo(productInfo);
 
@@ -80,6 +80,7 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(product);
     }
 
+    @Override
     public Product updateProduct(ProductInfo productInfo) {
         validateProductInfo(productInfo);
         if (productInfo.getId() == null) {
@@ -107,6 +108,7 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(existingProduct);
     }
 
+    @Override
     public void deleteProductById(String id) {
         if (!hasText(id)) {
             throw new IllegalArgumentException("Product ID cannot be null or empty for deletion");
@@ -118,6 +120,7 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    @Override
     public Product getProductById(String productId){
         if(!hasText(productId)) {
             throw new IllegalArgumentException("Product ID cannot be null or empty");
@@ -126,15 +129,18 @@ public class ProductServiceImpl implements ProductService {
         return productFound.orElseThrow(() -> new EntityNotFoundException("Product not found with ID: " + productId));
     }
 
+    @Override
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
+    @Override
     public List<Product> getProductsByCriteria(String nameFilter, List<String> categoryFilter,
                                                Boolean availabilityFilter) {
         return productRepository.findByCriteria(nameFilter, categoryFilter, availabilityFilter);
     }
 
+    @Override
     public void setProductInStock(String productId){
         Optional<Product> productFound = productRepository.findById(productId);
         if(productFound.isPresent()){
@@ -144,6 +150,7 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    @Override
     public void setProductOutOfStock(String productId){
         Optional<Product> productFound = productRepository.findById(productId);
         if(productFound.isPresent()){
@@ -187,11 +194,9 @@ public class ProductServiceImpl implements ProductService {
         BigDecimal averagePriceOfInStockProducts = totalProductsInStock == 0 ? BigDecimal.ZERO :
                 sumOfUnitPrices.divide(BigDecimal.valueOf(totalProductsInStock), 2, RoundingMode.HALF_UP);
         Map<String, BigDecimal> averagePriceOfInStockProductsByCategory = new HashMap<>();
-        countByCategory.forEach((category, count) -> {
-            averagePriceOfInStockProductsByCategory.put
-                    (category, sumOfUnitPricesByCategory.get(category).divide(BigDecimal.valueOf(count),
-                            2, RoundingMode.HALF_UP));
-        });
+        countByCategory.forEach((category, count) -> averagePriceOfInStockProductsByCategory.put
+                (category, sumOfUnitPricesByCategory.get(category).divide(BigDecimal.valueOf(count),
+                        2, RoundingMode.HALF_UP)));
 
         return new InventoryMetrics(
                 totalUnitsInStock,
@@ -203,18 +208,17 @@ public class ProductServiceImpl implements ProductService {
         );
     }
 
+    @Override
     public InventoryMetricsReport getInventoryReport() {
         InventoryMetrics metrics = calculateInventoryMetrics();
         List<CategoryMetrics> categoryMetricsList = new ArrayList<>();
 
-        metrics.getProductsInStockByCategory().forEach((categoryName, count) -> {
-            categoryMetricsList.add(CategoryMetrics.builder()
-                    .categoryName(categoryName)
-                    .totalProductsInStock(count)
-                    .totalValueInStock(metrics.getTotalValueOfInventoryByCategory().getOrDefault(categoryName, BigDecimal.ZERO))
-                    .averagePriceInStock(metrics.getAveragePriceOfInStockProductsByCategory().getOrDefault(categoryName, BigDecimal.ZERO))
-                    .build());
-        });
+        metrics.getProductsInStockByCategory().forEach((categoryName, count) -> categoryMetricsList.add(CategoryMetrics.builder()
+                .categoryName(categoryName)
+                .totalProductsInStock(count)
+                .totalValueInStock(metrics.getTotalValueOfInventoryByCategory().getOrDefault(categoryName, BigDecimal.ZERO))
+                .averagePriceInStock(metrics.getAveragePriceOfInStockProductsByCategory().getOrDefault(categoryName, BigDecimal.ZERO))
+                .build()));
 
         categoryMetricsList.sort(Comparator.comparing(CategoryMetrics::getCategoryName));
 
