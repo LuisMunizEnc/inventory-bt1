@@ -9,22 +9,49 @@ on:
     branches: [ "master" ]
     paths: 
       - 'products/**'
-
+permissions:
+  pull-requests: write
+env:
+  java_version: 24
+  java_distribution: temurin
 defaults:
   run:
     working-directory: ./products
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  test-coverage:
+          runs-on: ubuntu-latest # the "worker node" where it's going to be build
+          steps:
+            - name: Check out code
+              uses: actions/checkout@v4.1.7 # action
 
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up JDK 24
-      uses: actions/setup-java@v4
-      with:
-        java-version: '24'
-        distribution: 'temurin'
-        cache: maven
-    - name: Run Backend Tests with Maven
-      run: mvn -B test
+            - name: Set up jdk ${{ env.java_version }}
+              uses: actions/setup-java@v4
+              with:
+                java-version: ${{ env.java_version }}
+                distribution: ${{ env.java_distribution }}
+                cache: maven
+
+            - name: Generate Coverage Report
+              run: |
+                mvn clean org.jacoco:jacoco-maven-plugin:0.8.11:prepare-agent  test org.jacoco:jacoco-maven-plugin:0.8.11:report
+            - name: Upload Report
+              uses: 'actions/upload-artifact@v4'
+              with:
+                name: jacoco-report
+                path: ${{ github.workspace }}/backend/target/site/jacoco/jacoco.xml
+                retention-days: 1  
+            - name: Add coverage to PR
+              id: jacoco
+              uses: madrapps/jacoco-report@v1.7.2
+              with:
+                paths: ${{ github.workspace }}/backend/target/site/jacoco/jacoco.xml
+                token: ${{ secrets.GITHUB_TOKEN }}
+                min-coverage-overall: 80
+                min-coverage-changed-files: 80
+                title: Code Coverage
+
+            - name: Save Coverage To Environment Variable
+              run: |
+                echo "TOTAL_COVERAGE=${{ steps.jacoco.outputs.coverage-overall }}" >> $GITHUB_ENV
+                echo "CHANGED_FILES_COVERAGE=${{ steps.jacoco.outputs.coverage-changed-files }}" >> $GITHUB_ENV
