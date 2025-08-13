@@ -14,6 +14,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -23,10 +26,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -379,29 +379,6 @@ public class ProductControllerTest {
     }
 
     @Test
-    void getAllProducts_NoFilters_Success() throws Exception {
-        // given
-        List<Product> allProducts = Arrays.asList(product1, product2);
-        when(productService.getAllProducts()).thenReturn(allProducts);
-
-        // when
-        MockHttpServletResponse response = mockMvc.perform(MockMvcRequestBuilders.get("/products")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn().getResponse();
-
-        // then
-        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        List<Product> responseList = objectMapper.readValue(response.getContentAsString(), new TypeReference<>(){});
-        assertNotNull(responseList);
-        assertEquals(2, responseList.size());
-        assertEquals(product1.getId(), responseList.get(0).getId());
-        assertEquals(product2.getId(), responseList.get(1).getId());
-
-        verify(productService).getAllProducts();
-    }
-
-    @Test
     void getAllProducts_WithFilters_Success() throws Exception {
         // given
         List<Product> filteredProducts = Collections.singletonList(product1);
@@ -409,8 +386,9 @@ public class ProductControllerTest {
         List<String> categoryFilter = Collections.singletonList("Food");
         Boolean inStockFilter = true;
 
-        when(productService.getProductsByCriteria(eq(nameFilter), eq(categoryFilter), eq(inStockFilter)))
-                .thenReturn(filteredProducts);
+        Page<Product> productPage = new PageImpl<>(filteredProducts);
+        when(productService.getProductsByCriteria(eq(nameFilter), eq(categoryFilter), eq(inStockFilter), any(Pageable.class)))
+                .thenReturn(productPage);
 
         // when
         MockHttpServletResponse response = mockMvc.perform(MockMvcRequestBuilders.get("/products")
@@ -423,14 +401,18 @@ public class ProductControllerTest {
 
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        List<Product> responseList = objectMapper.readValue(response.getContentAsString(), new TypeReference<>() {
-        });
-        assertNotNull(responseList);
-        assertEquals(1, responseList.size());
-        assertEquals(product1.getId(), responseList.getFirst().getId());
 
-        verify(productService, times(1)).getProductsByCriteria(eq(nameFilter), eq(categoryFilter), eq(inStockFilter));
-        verify(productService, times(0)).getAllProducts();
+        String json = response.getContentAsString();
+        Map<String, Object> pagedResponse = objectMapper.readValue(json, new TypeReference<>() {});
+        List<Product> content = (List<Product>) pagedResponse.get("content");
+        assertNotNull(content);
+        assertEquals(1, content.size());
+
+        Map<?, ?> productMap = (Map<?, ?>) content.get(0);
+        assertEquals(product1.getId(), productMap.get("id"));
+        assertEquals(product1.getName(), productMap.get("name"));
+
+        verify(productService, times(1)).getProductsByCriteria(eq(nameFilter), eq(categoryFilter), eq(inStockFilter), any(Pageable.class));
     }
 
     @Test
