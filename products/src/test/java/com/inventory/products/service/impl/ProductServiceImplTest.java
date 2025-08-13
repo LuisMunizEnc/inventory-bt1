@@ -11,6 +11,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -402,42 +405,6 @@ public class ProductServiceImplTest {
         verifyNoInteractions(productRepository);
     }
 
-    // --- Tests for getAllProducts ---
-
-    @Test
-    public void givenNoProducts_whenGetAllProducts_thenReturnEmptyList() {
-        // given
-        when(productRepository.findAll()).thenReturn(new ArrayList<>());
-
-        // when
-        List<Product> products = productService.getAllProducts();
-
-        // then
-        assertNotNull(products);
-        assertTrue(products.isEmpty());
-        verify(productRepository).findAll();
-    }
-
-    @Test
-    public void givenSomeProducts_whenGetAllProducts_thenReturnListOfProducts() {
-        // given
-        List<Product> expectedProducts = Arrays.asList(
-                Product.builder().id(UUID.randomUUID().toString()).name("Product A").build(),
-                Product.builder().id(UUID.randomUUID().toString()).name("Product B").build()
-        );
-        when(productRepository.findAll()).thenReturn(expectedProducts);
-
-        // when
-        List<Product> products = productService.getAllProducts();
-
-        // then
-        assertNotNull(products);
-        assertEquals(2, products.size());
-        assertEquals("Product A", products.get(0).getName());
-        assertEquals("Product B", products.get(1).getName());
-        verify(productRepository).findAll();
-    }
-
     // --- Tests for getProductById ---
 
     @Test
@@ -508,16 +475,20 @@ public class ProductServiceImplTest {
                 Product.builder().name("Tablet").category(Category.builder().categoryName("Electronics").build()).inStock(0).build(),
                 Product.builder().name("Apple Pie").category(Category.builder().categoryName("Food").build()).inStock(15).build()
         );
-        when(productRepository.findByCriteria(nameFilter, null, false)).thenReturn(Arrays.asList(allProducts.get(0)));
+        Page<Product> productPage = new PageImpl<>(allProducts.stream()
+                .filter(p -> p.getName().toLowerCase().contains(nameFilter.toLowerCase()))
+                .toList());
+        Pageable pageable = Pageable.unpaged();
+        when(productRepository.findByCriteria(eq(nameFilter), eq(null), eq(false), any(Pageable.class))).thenReturn(productPage);
 
         // when
-        List<Product> filteredProducts = productService.getProductsByCriteria(nameFilter, null, false);
+        Page<Product> filteredProducts = productService.getProductsByCriteria(nameFilter, null, false, pageable);
 
         // then
         assertNotNull(filteredProducts);
-        assertEquals(1, filteredProducts.size());
-        assertEquals("Laptop Pro", filteredProducts.getFirst().getName());
-        verify(productRepository).findByCriteria(nameFilter, null, false);
+        assertEquals(1, filteredProducts.getSize());
+        assertEquals("Laptop Pro", filteredProducts.getContent().getFirst().getName());
+        verify(productRepository).findByCriteria(eq(nameFilter), eq(null), eq(false), any(Pageable.class));
     }
 
     @Test
@@ -530,16 +501,20 @@ public class ProductServiceImplTest {
                 Product.builder().name("Tablet").category(Category.builder().categoryName("Electronics").build()).inStock(0).build(),
                 Product.builder().name("Apple Pie").category(Category.builder().categoryName("Food").build()).inStock(15).build()
         );
-        when(productRepository.findByCriteria(null, categoryFilter, false)).thenReturn(Arrays.asList(allProducts.get(0), allProducts.get(1), allProducts.get(2)));
+        Page<Product> productPage = new PageImpl<>(allProducts.stream()
+                .filter(p -> p.getCategory().getCategoryName().equals("Electronics"))
+                .toList());
+        Pageable pageable = Pageable.unpaged();
+        when(productRepository.findByCriteria(eq(null), eq(categoryFilter), eq(false), any(Pageable.class))).thenReturn(productPage);
 
         // when
-        List<Product> filteredProducts = productService.getProductsByCriteria(null, categoryFilter, false);
+        Page<Product> filteredProducts = productService.getProductsByCriteria(null, categoryFilter, false, pageable);
 
         // then
         assertNotNull(filteredProducts);
-        assertEquals(3, filteredProducts.size());
+        assertEquals(3, filteredProducts.getSize());
         assertTrue(filteredProducts.stream().allMatch(p -> p.getCategory().getCategoryName().equals("Electronics")));
-        verify(productRepository).findByCriteria(null, categoryFilter, false);
+        verify(productRepository).findByCriteria(eq(null), eq(categoryFilter), eq(false), any(Pageable.class));
     }
 
     @Test
@@ -553,17 +528,21 @@ public class ProductServiceImplTest {
                 Product.builder().name("Mouse").category(Category.builder().categoryName("Electronics").build()).inStock(10).build(),
                 Product.builder().name("Apple Pie").category(Category.builder().categoryName("Food").build()).inStock(15).build()
         );
-        when(productRepository.findByCriteria(nameFilter, null, availabilityFilter)).thenReturn(Arrays.asList(allProducts.get(0)));
+        Page<Product> productPage = new PageImpl<>(allProducts.stream()
+                .filter(p -> p.getName().toLowerCase().contains(nameFilter.toLowerCase()) && p.getInStock() > 0)
+                .toList());
+        Pageable pageable = Pageable.unpaged();
+        when(productRepository.findByCriteria(eq(nameFilter), eq(null), eq(availabilityFilter), any(Pageable.class))).thenReturn(productPage);
 
         // when
-        List<Product> filteredProducts = productService.getProductsByCriteria(nameFilter, null, availabilityFilter);
+        Page<Product> filteredProducts = productService.getProductsByCriteria(nameFilter, null, availabilityFilter, pageable);
 
         // then
         assertNotNull(filteredProducts);
-        assertEquals(1, filteredProducts.size());
-        assertEquals("Laptop Pro", filteredProducts.getFirst().getName());
-        assertTrue(filteredProducts.getFirst().getInStock()>0);
-        verify(productRepository).findByCriteria(nameFilter, null, availabilityFilter);
+        assertEquals(1, filteredProducts.getSize());
+        assertEquals("Laptop Pro", filteredProducts.getContent().getFirst().getName());
+        assertTrue(filteredProducts.getContent().getFirst().getInStock()>0);
+        verify(productRepository).findByCriteria(eq(nameFilter), eq(null), eq(availabilityFilter), any(Pageable.class));
     }
 
     // --- Tests for setProductInStock ---

@@ -9,6 +9,8 @@ import com.inventory.products.repository.ProductRepository;
 import com.inventory.products.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -130,14 +132,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
-    }
-
-    @Override
-    public List<Product> getProductsByCriteria(String nameFilter, List<String> categoryFilter,
-                                               Boolean availabilityFilter) {
-        return productRepository.findByCriteria(nameFilter, categoryFilter, availabilityFilter);
+    public Page<Product> getProductsByCriteria(String nameFilter, List<String> categoryFilter,
+                                               Boolean availabilityFilter, Pageable pageable) {
+        return productRepository.findByCriteria(nameFilter, categoryFilter, availabilityFilter, pageable);
     }
 
     @Override

@@ -21,10 +21,21 @@ export interface Product {
     updatedAt: string
 }
 
+export interface ProductPage{
+    content: Product[]
+    page:{
+        totalElements: number
+        totalPages: number
+    }
+}
+
 export interface ProductFilters {
     name?: string
     categories?: string[]
     inStock?: boolean | null
+    page?: number
+    size?: number
+    sort?: string
 }
 
 export interface SortConfig {

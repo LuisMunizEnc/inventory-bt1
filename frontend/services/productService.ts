@@ -1,8 +1,8 @@
 import { api } from "./api"
-import type { Product, ProductInfo, ProductFilters, InventoryMetrics } from "../types"
+import type { Product, ProductInfo, ProductFilters, InventoryMetrics, ProductPage } from "../types"
 
 export const productService = {
-  getAllProducts: async (filters?: ProductFilters): Promise<Product[]> => {
+  getAllProducts: async (filters?: ProductFilters): Promise<ProductPage> => {
     const params = new URLSearchParams()
 
     if (filters?.name) {
@@ -17,6 +17,18 @@ export const productService = {
 
     if (filters?.inStock !== null && filters?.inStock !== undefined) {
       params.append("inStock", filters.inStock.toString())
+    }
+
+    if(filters?.page !== undefined) {
+      params.append("page", filters.page.toString())
+    }
+
+    if(filters?.size !== undefined) {
+      params.append("size", filters.size.toString())
+    }
+
+    if(filters?.sort !== undefined) {
+      params.append("sort", filters.sort)
     }
 
     const response = await api.get(`/products?${params.toString()}`)

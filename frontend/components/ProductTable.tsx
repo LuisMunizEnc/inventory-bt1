@@ -19,16 +19,16 @@ import { ProductModal } from "./modal/ProductModal"
 import { CategoryModal } from "./modal/CategoryModal"
 import { DeleteProductModal } from "./modal/DeleteProductModal"
 import { EditProductModal } from "./modal/EditProductModal"
-import { useSorting } from "../hooks/useSorting"
 
 const ITEMS_PER_PAGE = 10
 
 export function ProductTable() {
   const dispatch = useAppDispatch()
-  const { products, loading, error } = useAppSelector((state) => state.products)
-  const [loadingProductId, setLoadingProductId] = useState<string | null>(null)
-  const { sortedData, sortConfig, handleSort, clearSort } = useSorting(products)
+  const { products, totalElements, loading, error } = useAppSelector((state) => state.products)
   const [currentPage, setCurrentPage] = useState(1)
+  const [sortField, setSortField] = useState<SortConfig["field"]>("name")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
+  const [loadingProductId, setLoadingProductId] = useState<string | null>(null)
 
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
@@ -38,19 +38,13 @@ export function ProductTable() {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
-  // Pagination
-  const totalPages = Math.ceil(sortedData.length / ITEMS_PER_PAGE)
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-  const endIndex = startIndex + ITEMS_PER_PAGE
-  const currentData = sortedData.slice(startIndex, endIndex)
-
   useEffect(() => {
-    setCurrentPage(1)
-  }, [products.length])
-
-  useEffect(() => {
-    dispatch(fetchProducts())
-  }, [dispatch])
+    dispatch(fetchProducts({
+      page: currentPage - 1,
+      size: ITEMS_PER_PAGE,
+      sort: `${sortField},${sortDirection}`,
+    }))
+  }, [dispatch, currentPage, sortField, sortDirection])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -77,25 +71,17 @@ export function ProductTable() {
     }
   }
 
-  const getSortIcon = (field: SortConfig["field"]) => {
-    if (!sortConfig || sortConfig.field !== field) {
-      return <ArrowUpDown className="h-4 w-4 text-gray-400" />
+  const handleSort = (field: SortConfig["field"]) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))
+    } else {
+      setSortField(field)
+      setSortDirection("asc")
     }
-
-    return sortConfig.direction === "asc" ? (
-      <ArrowUp className="h-4 w-4 text-blue-600" />
-    ) : (
-      <ArrowDown className="h-4 w-4 text-blue-600" />
-    )
+    setCurrentPage(1)
   }
 
-  const SortableHeader = ({
-    field,
-    children,
-  }: {
-    field: SortConfig["field"]
-    children: React.ReactNode
-  }) => (
+  const SortableHeader = ({ field, children }: { field: SortConfig["field"], children: React.ReactNode }) => (
     <TableHead>
       <Button
         variant="ghost"
@@ -104,7 +90,11 @@ export function ProductTable() {
       >
         <div className="flex items-center gap-2">
           {children}
-          {getSortIcon(field)}
+          {sortField === field ? (
+            sortDirection === "asc" ? <ArrowUp className="h-4 w-4 text-blue-600" /> : <ArrowDown className="h-4 w-4 text-blue-600" />
+          ) : (
+            <ArrowUpDown className="h-4 w-4 text-gray-400" />
+          )}
         </div>
       </Button>
     </TableHead>
@@ -159,25 +149,14 @@ export function ProductTable() {
     setIsDeleteModalOpen(true)
   }
 
-  const goToPage = (page: number) => {
-    setCurrentPage(page)
-  }
-
-  const goToFirstPage = () => {
-    setCurrentPage(1)
-  }
-
-  const goToLastPage = () => {
-    setCurrentPage(totalPages)
-  }
-
-  const goToPreviousPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1))
-  }
-
-  const goToNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-  }
+  const goToPage = (page: number) => setCurrentPage(page)
+  const goToFirstPage = () => setCurrentPage(1)
+  const goToLastPage = () => setCurrentPage(totalPages)
+  const goToPreviousPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1))
+  const goToNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+  const totalPages = Math.ceil(totalElements / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE + 1
+  const endIndex = startIndex + products.length - 1
 
   const getPageNumbers = () => {
     const pageNumbers = []
@@ -238,7 +217,7 @@ export function ProductTable() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>Products ({sortedData.length})</span>
+          <span>Products ({products.length})</span>
           <div className="gap-2 flex items-center">
             <Button variant="outline" onClick={() => setIsCategoryModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -252,7 +231,7 @@ export function ProductTable() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {sortedData.length === 0 ? (
+        {products.length === 0 ? (
           <div className="text-center py-8">
             <Package className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <p className="text-gray-500">No products found</p>
@@ -273,7 +252,7 @@ export function ProductTable() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currentData.map((product: Product) => (
+                {products.map((product: Product) => (
                   <TableRow key={product.id} className={getRowBackgroundColor(product.expirationDate)}>
                     <TableCell>
                       <Button
@@ -388,10 +367,10 @@ export function ProductTable() {
         />
       </CardContent>
 
-      {sortedData.length > 0 && (
+      {products.length > 0 && (
         <CardFooter className="flex justify-between items-center border-t px-6 py-4">
           <div className="text-sm text-gray-500">
-            Showing {startIndex + 1}-{Math.min(endIndex, sortedData.length)} of {sortedData.length} products
+            Showing { startIndex }-{ endIndex } of {totalElements} products
           </div>
 
           <div className="flex items-center space-x-2">

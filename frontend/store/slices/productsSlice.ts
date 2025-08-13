@@ -4,6 +4,8 @@ import { productService } from "../../services/productService"
 
 interface ProductsState {
   products: Product[]
+  totalElements: number
+  totalPages: number
   loading: boolean
   error: string | null
   filters: ProductFilters
@@ -11,12 +13,17 @@ interface ProductsState {
 
 const initialState: ProductsState = {
   products: [],
+  totalElements: 0,
+  totalPages: 0,
   loading: false,
   error: null,
   filters: {
     name: "",
     categories: [],
     inStock: null,
+    page: 0,
+    size: 10,
+    sort: "name,asc",
   },
 }
 
@@ -49,6 +56,9 @@ const productsSlice = createSlice({
         name: "",
         categories: [],
         inStock: null,
+        page: 0,
+        size: 10,
+        sort: "name,asc",
       }
     },
   },
@@ -60,7 +70,9 @@ const productsSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false
-        state.products = action.payload
+        state.products = action.payload.content
+        state.totalElements = action.payload.page.totalElements
+        state.totalPages = action.payload.page.totalPages
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false
