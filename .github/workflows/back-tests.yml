@@ -19,7 +19,7 @@ defaults:
     working-directory: ./products
 
 jobs:
-  test-coverage:
+  test:
           runs-on: ubuntu-latest # the "worker node" where it's going to be build
           steps:
             - name: Check out code
