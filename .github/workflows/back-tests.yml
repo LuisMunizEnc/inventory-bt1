@@ -39,13 +39,13 @@ jobs:
               uses: 'actions/upload-artifact@v4'
               with:
                 name: jacoco-report
-                path: ${{ github.workspace }}/backend/target/site/jacoco/jacoco.xml
+                path: ${{ github.workspace }}/target/site/jacoco/jacoco.xml
                 retention-days: 1  
             - name: Add coverage to PR
               id: jacoco
               uses: madrapps/jacoco-report@v1.7.2
               with:
-                paths: ${{ github.workspace }}/backend/target/site/jacoco/jacoco.xml
+                paths: ${{ github.workspace }}/target/site/jacoco/jacoco.xml
                 token: ${{ secrets.GITHUB_TOKEN }}
                 min-coverage-overall: 80
                 min-coverage-changed-files: 80
