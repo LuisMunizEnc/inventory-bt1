@@ -3,6 +3,8 @@ package com.inventory.products.service;
 import com.inventory.products.dto.InventoryMetricsReport;
 import com.inventory.products.model.Product;
 import com.inventory.products.dto.ProductInfo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -15,9 +17,7 @@ public interface ProductService {
 
     void deleteProductById(String productId);
 
-    List<Product> getAllProducts();
-
-    List<Product> getProductsByCriteria(String name, List<String> categoryFilter, Boolean availability);
+    Page<Product> getProductsByCriteria(String name, List<String> categoryFilter, Boolean availability, Pageable pageable);
 
     void setProductInStock(String productId);
 

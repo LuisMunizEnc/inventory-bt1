@@ -9,10 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.web.PageableDefault;
 
 import java.util.List;
-
-import static org.springframework.util.StringUtils.hasText;
 
 @Slf4j
 @RestController
@@ -61,23 +62,19 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts(
+    public ResponseEntity<Page<Product>> getAllProducts(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) List<String> categories,
-            @RequestParam(required = false) Boolean inStock
+            @RequestParam(required = false) Boolean inStock,
+            @PageableDefault(size = 10, sort = "name") Pageable pageable
     ) {
-        log.info("Received request to get all products with filters - name: {}, categories: {}, inStock: {}",
-                name, categories, inStock);
+        log.info("Received request to get products with filters - name: {}, categories: {}, inStock: {}, page: {}, sort: {}",
+                name, categories, inStock, pageable.getPageNumber(), pageable.getSort());
 
-        List<Product> products;
-        if (hasText(name) || (categories != null && !categories.isEmpty()) || inStock != null) {
-            products = productService.getProductsByCriteria(name, categories, inStock);
-        } else {
-            products = productService.getAllProducts();
-        }
-
-        log.info("Returning {} products", products.size());
+        Page<Product> products = productService.getProductsByCriteria(name, categories, inStock, pageable);
+        log.info("Returning {} products", products.getTotalElements());
         return new ResponseEntity<>(products, HttpStatus.OK);
+
     }
 
     @PutMapping("/{id}/outofstock")
