@@ -71,8 +71,8 @@ const productsSlice = createSlice({
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false
         state.products = action.payload.content
-        state.totalElements = action.payload.totalElements
-        state.totalPages = action.payload.totalPages
+        state.totalElements = action.payload.page.totalElements
+        state.totalPages = action.payload.page.totalPages
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false

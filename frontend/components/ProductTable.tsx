@@ -156,7 +156,7 @@ export function ProductTable() {
   const goToNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages))
   const totalPages = Math.ceil(totalElements / ITEMS_PER_PAGE)
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE + 1
-  const endIndex = Math.min(currentPage * ITEMS_PER_PAGE, totalElements)
+  const endIndex = startIndex + products.length - 1
 
   const getPageNumbers = () => {
     const pageNumbers = []
@@ -369,9 +369,9 @@ export function ProductTable() {
 
       {products.length > 0 && (
         <CardFooter className="flex justify-between items-center border-t px-6 py-4">
-          {/* <div className="text-sm text-gray-500">
-            Showing { startIndex }-{Math.min(endIndex, products.length)} of {products.length} products
-          </div> */}
+          <div className="text-sm text-gray-500">
+            Showing { startIndex }-{ endIndex } of {totalElements} products
+          </div>
 
           <div className="flex items-center space-x-2">
             <Button

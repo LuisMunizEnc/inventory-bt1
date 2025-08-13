@@ -23,8 +23,10 @@ export interface Product {
 
 export interface ProductPage{
     content: Product[]
-    totalElements: number
-    totalPages: number
+    page:{
+        totalElements: number
+        totalPages: number
+    }
 }
 
 export interface ProductFilters {
