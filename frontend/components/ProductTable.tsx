@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
 import {
   Package, Edit, Plus, Trash, ArrowUpDown, ArrowUp, ArrowDown,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight
@@ -375,6 +376,7 @@ export function ProductTable() {
 
           <div className="flex items-center space-x-2">
             <Button
+              aria-label="first-page"
               variant="outline"
               size="sm"
               onClick={goToFirstPage}
@@ -383,13 +385,14 @@ export function ProductTable() {
             >
               <ChevronsLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={goToPreviousPage} disabled={currentPage === 1}>
+            <Button aria-label="prev-page" variant="outline" size="sm" onClick={goToPreviousPage} disabled={currentPage === 1}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
 
             <div className="flex items-center">
               {getPageNumbers().map((page) => (
                 <Button
+                  aria-label={cn("page-", page)}
                   key={page}
                   variant={currentPage === page ? "default" : "outline"}
                   size="sm"
@@ -401,10 +404,11 @@ export function ProductTable() {
               ))}
             </div>
 
-            <Button variant="outline" size="sm" onClick={goToNextPage} disabled={currentPage === totalPages}>
+            <Button aria-label="next-page" variant="outline" size="sm" onClick={goToNextPage} disabled={currentPage === totalPages}>
               <ChevronRight className="h-4 w-4" />
             </Button>
             <Button
+              aria-label="last-page"
               variant="outline"
               size="sm"
               onClick={goToLastPage}
