@@ -262,7 +262,6 @@ export function ProductModal({ isOpen, onClose, onProductCreated }: ProductModal
                   selected={formData.expirationDate}
                   onSelect={(date) => handleInputChange("expirationDate", date)}
                   disabled={(date) => date < new Date()}
-                  initialFocus
                 />
               </PopoverContent>
             </Popover>
